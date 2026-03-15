@@ -193,11 +193,11 @@ const blob=new Blob([JSON.stringify(MANIFEST)],{type:'application/json'});
 document.getElementById('manifest-link').href=URL.createObjectURL(blob);
 
 const PORT=[
-  {ticker:'AMDG', name:'AMD Growth',    target:20, buyLim:18.5, sellLim:21.5},
-  {ticker:'SPXL', name:'S&P 3x Bull',   target:20, buyLim:18.5, sellLim:21.5},
-  {ticker:'NVDU', name:'NVIDIA 2x',     target:20, buyLim:18.5, sellLim:21.5},
-  {ticker:'TSLL', name:'Tesla 2x Bull', target:20, buyLim:18.5, sellLim:21.5},
-  {ticker:'TMF',  name:'T-Bond 3x Bull',target:20, buyLim:18.5, sellLim:21.5},
+  {ticker:'AMDG', name:'AMD Growth',    target:20, buyLim:17, sellLim:23},
+  {ticker:'SPXL', name:'S&P 3x Bull',   target:20, buyLim:17, sellLim:23},
+  {ticker:'NVDU', name:'NVIDIA 2x',     target:20, buyLim:17, sellLim:23},
+  {ticker:'TSLL', name:'Tesla 2x Bull', target:20, buyLim:17, sellLim:23},
+  {ticker:'TMF',  name:'T-Bond 3x Bull',target:20, buyLim:17, sellLim:23},
 ];
 
 let prices={},prevClose={},startPrices={},startLots={},arTimer=null;
