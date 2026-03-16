@@ -1,4 +1,3 @@
-Content is user-generated and unverified.
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -193,11 +192,11 @@ const blob=new Blob([JSON.stringify(MANIFEST)],{type:'application/json'});
 document.getElementById('manifest-link').href=URL.createObjectURL(blob);
 
 const PORT=[
-  {ticker:'AMDG', name:'AMD Growth',    target:20, buyLim:17, sellLim:23},
-  {ticker:'SPXL', name:'S&P 3x Bull',   target:20, buyLim:17, sellLim:23},
-  {ticker:'NVDU', name:'NVIDIA 2x',     target:20, buyLim:17, sellLim:23},
-  {ticker:'TSLL', name:'Tesla 2x Bull', target:20, buyLim:17, sellLim:23},
-  {ticker:'TMF',  name:'T-Bond 3x Bull',target:20, buyLim:17, sellLim:23},
+  {ticker:'AMDG', name:'AMD Growth',    target:20, buyLim:18, sellLim:22},
+  {ticker:'SPXL', name:'S&P 3x Bull',   target:20, buyLim:18, sellLim:22},
+  {ticker:'NVDU', name:'NVIDIA 2x',     target:20, buyLim:18, sellLim:22},
+  {ticker:'TSLL', name:'Tesla 2x Bull', target:20, buyLim:18, sellLim:22},
+  {ticker:'TMF',  name:'T-Bond 3x Bull',target:20, buyLim:18, sellLim:22},
 ];
 
 let prices={},prevClose={},startPrices={},startLots={},arTimer=null;
