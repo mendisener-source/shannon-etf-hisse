@@ -1,3 +1,4 @@
+Content is user-generated and unverified.
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -404,20 +405,29 @@ function toggleAutoRefresh(){startAutoRefresh();}
 function saveState(){
   try{
     const d=JSON.stringify({prices,prevClose,startPrices,startLots});
-    try{localStorage.setItem('shannon_etf',d);}catch(e){}
-    try{sessionStorage.setItem('shannon_etf',d);}catch(e){}
-    try{const enc=btoa(unescape(encodeURIComponent(d)));document.cookie='shannon_etf='+enc+';path=/;max-age=31536000;SameSite=Strict';}catch(e){}
+    try{localStorage.setItem('shannon_etf_v2',d);}catch(e){}
+    try{sessionStorage.setItem('shannon_etf_v2',d);}catch(e){}
+    try{const enc=btoa(unescape(encodeURIComponent(d)));document.cookie='shannon_etf_v2='+enc+';path=/;max-age=31536000;SameSite=Strict';}catch(e){}
   }catch(e){}
 }
 function loadState(){
   try{
     let raw=null;
-    try{raw=localStorage.getItem('shannon_etf');}catch(e){}
-    if(!raw){try{raw=sessionStorage.getItem('shannon_etf');}catch(e){}}
-    if(!raw){try{const m=document.cookie.match(/shannon_etf=([^;]+)/);if(m)raw=decodeURIComponent(escape(atob(m[1])));}catch(e){}}
+    try{raw=localStorage.getItem('shannon_etf_v2');}catch(e){}
+    if(!raw){try{raw=sessionStorage.getItem('shannon_etf_v2');}catch(e){}}
+    if(!raw){try{const m=document.cookie.match(/shannon_etf_v2=([^;]+)/);if(m)raw=decodeURIComponent(escape(atob(m[1])));}catch(e){}}
     if(!raw)return;
     const s=JSON.parse(raw);
     prices=s.prices||{};prevClose=s.prevClose||{};startPrices=s.startPrices||{};startLots=s.startLots||{};
+    // Yüklenen fiyatları input'lara yaz
+    PORT.forEach(p=>{
+      const inp=document.getElementById('price-'+p.ticker);
+      if(inp&&prices[p.ticker])inp.value=prices[p.ticker].toFixed(2);
+      const si=document.getElementById('sp-'+p.ticker);
+      if(si&&startPrices[p.ticker])si.value=startPrices[p.ticker];
+      const li=document.getElementById('sl-'+p.ticker);
+      if(li&&startLots[p.ticker])li.value=startLots[p.ticker];
+    });
   }catch(e){}
 }
 
