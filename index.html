@@ -381,12 +381,24 @@ async function fetchAllPrices(){
       const data=await res.json();
       const meta=data?.chart?.result?.[0]?.meta;
       if(!meta)throw new Error();
-      const cur=meta.regularMarketPrice||0;
+      // Premarket > regularMarket > previousClose sırasıyla dene
+      const premarket = meta.preMarketPrice||0;
+      const regular   = meta.regularMarketPrice||0;
+      const cur = premarket > 0 ? premarket : regular > 0 ? regular : 0;
+      const marketState = meta.marketState||'CLOSED';
       if(cur>0){
         prevClose[p.ticker]=meta.previousClose||meta.chartPreviousClose||cur;
         prices[p.ticker]=cur;
         const inp=document.getElementById('price-'+p.ticker);
         if(inp&&!inp.matches(':focus'))inp.value=cur.toFixed(2);
+        // Market durumunu göster
+        const pEl=document.getElementById('pchange-'+p.ticker);
+        if(pEl){
+          const ch=(cur-(meta.previousClose||cur))/(meta.previousClose||cur)*100;
+          const stateLabel=marketState==='PRE'?'⏰ Pre':marketState==='POST'?'🌙 Post':marketState==='REGULAR'?'🟢 Açık':'🔴 Kapalı';
+          pEl.textContent=`${stateLabel} ${ch>=0?'+':''}${ch.toFixed(2)}%`;
+          pEl.style.color=ch>0?'var(--green)':ch<0?'var(--red)':'var(--muted)';
+        }
         fetched++;
       }
     }catch(e){}
