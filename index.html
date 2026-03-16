@@ -1,4 +1,3 @@
-Content is user-generated and unverified.
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -376,7 +375,14 @@ async function fetchAllPrices(){
   for(const p of PORT){
     try{
       const sym=encodeURIComponent(p.ticker);
-      const res=await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=2d`);
+      // Önce allorigins proxy dene, sonra direkt Yahoo
+      let res;
+      try{
+        const proxyUrl=`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=2d`)}`;
+        res=await fetch(proxyUrl);
+      }catch(e){
+        res=await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=2d`);
+      }
       if(!res.ok)throw new Error();
       const data=await res.json();
       const meta=data?.chart?.result?.[0]?.meta;
