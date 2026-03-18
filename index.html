@@ -358,6 +358,36 @@ function renderPL(){
 
 function checkSignal(ticker){const p=PORT.find(x=>x.ticker===ticker);if(!p)return;const sig=signalOf(p);if(sig==='hold')return;triggerAlert(sig,`${ticker} ${sig==='buy'?'AL':'SAT'} SİNYALİ — %${curPct(p).toFixed(2)}`);}
 
+function rebalanceSuggestion(buyTicker){
+  const tv=totalVal();if(!tv)return'';
+  const buyP=PORT.find(p=>p.ticker===buyTicker);if(!buyP)return'';
+  const buyPr=prices[buyTicker]||0;if(!buyPr)return'';
+  const needed=tv*buyP.target/100-posVal(buyP);if(needed<=0)return'';
+  const sellers=PORT.filter(p=>p.ticker!==buyTicker&&curPct(p)>p.target);
+  sellers.sort((a,b)=>curPct(b)-b.target-(curPct(a)-a.target));
+  if(sellers.length===0)return'';
+  let html=`<div style="margin-top:8px;padding:10px 12px;background:rgba(0,229,255,.06);border:1px solid var(--accent);border-radius:8px"><div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--accent);margin-bottom:8px">⚖️ DENGE ÖNERİSİ — Alım İçin Sat</div>`;
+  let remaining=needed;
+  for(const s of sellers){if(remaining<=0)break;const excess=posVal(s)-tv*s.target/100;if(excess<=0)continue;const sellShares=(Math.min(excess,remaining)/(prices[s.ticker]||1));if(sellShares<=0.001)continue;html+=`<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="color:var(--red)">↓ ${s.ticker} sat</span><span style="font-family:'Share Tech Mono',monospace;color:var(--red)">${sellShares.toFixed(3)} adet / $${fmt2(sellShares*(prices[s.ticker]||0))}</span></div>`;remaining-=sellShares*(prices[s.ticker]||0);}
+  return html+'</div>';
+}
+
+function rebalanceBuySuggestion(sellTicker){
+  const tv=totalVal();if(!tv)return'';
+  const sellP=PORT.find(p=>p.ticker===sellTicker);if(!sellP)return'';
+  const sellPr=prices[sellTicker]||0;if(!sellPr)return'';
+  const lo=startLots[sellTicker]||0;
+  const tShares=tv*sellP.target/100/sellPr;
+  const sellAmount=Math.max(0,lo-tShares)*sellPr;if(sellAmount<=0)return'';
+  const buyers=PORT.filter(p=>p.ticker!==sellTicker&&curPct(p)<p.target);
+  buyers.sort((a,b)=>(b.target-curPct(b))-(a.target-curPct(a)));
+  if(buyers.length===0)return'';
+  let html=`<div style="margin-top:8px;padding:10px 12px;background:rgba(0,255,136,.06);border:1px solid var(--green);border-radius:8px"><div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--green);margin-bottom:8px">⚖️ DENGE ÖNERİSİ — Satış Tutarıyla Al</div><div style="font-size:11px;color:var(--muted);margin-bottom:8px">Satış tutarı: $${fmt2(sellAmount)}</div>`;
+  let remaining=sellAmount;
+  for(const b of buyers){if(remaining<=0)break;const pr=prices[b.ticker]||0;if(!pr)continue;const deficit=tv*b.target/100-posVal(b);if(deficit<=0)continue;const buyShares=Math.min(deficit,remaining)/pr;if(buyShares<=0.001)continue;html+=`<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="color:var(--green)">↑ ${b.ticker} al</span><span style="font-family:'Share Tech Mono',monospace;color:var(--green)">${buyShares.toFixed(3)} adet / $${fmt2(buyShares*pr)}</span></div>`;remaining-=buyShares*pr;}
+  if(remaining>0)html+=`<div style="font-size:11px;color:var(--muted);margin-top:4px">Kalan: $${fmt2(remaining)}</div>`;
+  return html+'</div>';
+}
 function triggerAlert(type,msg){
   if(type!=='info'){
     if(document.getElementById('vibrate-toggle').checked&&navigator.vibrate)navigator.vibrate(type==='buy'?[100,50,100]:[200,50,200,50,200]);
