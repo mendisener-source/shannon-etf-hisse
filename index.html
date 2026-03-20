@@ -155,15 +155,11 @@ canvas{width:100%;border-radius:8px;background:var(--bg)}
   </div>
 </div>
 
-<!-- GRAFİK SEKMESİ -->
-
 <div id="tab-chart" class="section">
-  <!-- Kur bilgisi -->
   <div style="background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.2);border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
     <div style="font-size:11px;color:var(--muted)">USD/TL <span id="chart-kur-time" style="font-size:10px"></span></div>
     <div style="font-family:'Share Tech Mono',monospace;font-size:16px;color:var(--accent)" id="chart-kur-val">—</div>
   </div>
-
   <div class="card" style="padding:10px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <div class="sec-title" style="margin:0;border:none;padding:0"><span class="dot" style="background:var(--accent)"></span>TOPLAM PORTFÖY ($)</div>
@@ -175,24 +171,20 @@ canvas{width:100%;border-radius:8px;background:var(--bg)}
     </div>
     <canvas id="chart-total-usd" height="160"></canvas>
   </div>
-
   <div class="card" style="padding:10px;margin-top:0">
     <div class="sec-title" style="margin-bottom:8px"><span class="dot" style="background:var(--yellow)"></span>TOPLAM PORTFÖY (₺)</div>
     <canvas id="chart-total-tl" height="140"></canvas>
   </div>
-
   <div class="card" style="padding:10px;margin-top:0">
     <div class="sec-title" style="margin-bottom:8px"><span class="dot" style="background:var(--green)"></span>HER VARLIK — $ GELİŞİMİ</div>
     <canvas id="chart-each" height="160"></canvas>
     <div class="legend" id="chart-legend"></div>
   </div>
-
   <div class="card" style="padding:10px;margin-top:0">
     <div class="sec-title" style="margin-bottom:8px"><span class="dot" style="background:var(--bull)"></span>% BÜYÜME (Başlangıçtan)</div>
     <canvas id="chart-pct" height="140"></canvas>
     <div class="legend" id="chart-pct-legend"></div>
   </div>
-
   <div class="card" style="padding:10px;margin-top:0">
     <div class="sec-title" style="margin-bottom:8px"><span class="dot" style="background:var(--yellow)"></span>GÜNLÜK DEĞİŞİM (%)</div>
     <canvas id="chart-daily" height="120"></canvas>
@@ -250,19 +242,18 @@ const PORT=[
 const COLORS=['#00e5ff','#ff6d00','#00ff88','#ffd700','#a78bfa'];
 
 let prices={},prevClose={},startPrices={},startLots={},arTimer=null;
-let priceHistory=[]; // [{date, prices:{ticker:val}, totalUSD, totalTL, kur}]
+let priceHistory=[];
 let kurVal=0;
 let chartRange=30;
 
 window.onload=()=>{loadState();buildSignalCards();buildLotInputs();fillInputs();refreshDisplays();fetchAllPrices();fetchKur();startAutoRefresh();};
 window.onbeforeunload=()=>{saveState();};
 
-// ── KUR ───────────────────────────────────────────────────────────────────────
 async function fetchKur(){
   try{
     const url='https://query1.finance.yahoo.com/v8/finance/chart/USDTRY=X?interval=1d&range=1d';
     let res;
-    try{res=await fetch(https://api.allorigins.win/raw?url=${encodeURIComponent(url)});}catch(e){res=await fetch(url);}
+    try{res=await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);}catch(e){res=await fetch(url);}
     if(!res.ok)throw new Error();
     const d=await res.json();
     const m=d?.chart?.result?.[0]?.meta;
@@ -274,7 +265,6 @@ async function fetchKur(){
   }catch(e){}
 }
 
-// ── TABS ──────────────────────────────────────────────────────────────────────
 function showTab(el){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -295,7 +285,7 @@ function signalOf(p){const pr=prices[p.ticker]||0,lo=startLots[p.ticker]||0;if(!
 function buildSignalCards(){
   const c=document.getElementById('tab-signals');c.innerHTML='';
   const h=document.createElement('div');h.className='sec-title';
-  h.innerHTML=<span class="dot" style="background:var(--accent)"></span>PORTFÖY — %${PORT.reduce((s,p)=>s+p.target,0)};
+  h.innerHTML=`<span class="dot" style="background:var(--accent)"></span>PORTFÖY — %${PORT.reduce((s,p)=>s+p.target,0)}`;
   c.appendChild(h);
   PORT.forEach((p,pi)=>{
     const div=document.createElement('div');div.className='card offense';
@@ -378,24 +368,22 @@ function refreshDisplays(){
     const fillCol=sig==='buy'?'var(--green)':sig==='sell'?'var(--red)':'var(--accent)';
     const fill=document.getElementById('bfill-'+p.ticker);
     if(fill){fill.style.width=curPos+'%';fill.style.background=fillCol;}
-    ['buy','sell','cur'].forEach(k=>{const el=document.getElementById(bm-${k}-${p.ticker});if(el)el.style.left=(k==='buy'?buyPos:k==='sell'?sellPos:curPos)+'%';});
+    ['buy','sell','cur'].forEach(k=>{const el=document.getElementById(`bm-${k}-${p.ticker}`);if(el)el.style.left=(k==='buy'?buyPos:k==='sell'?sellPos:curPos)+'%';});
     const tvEl=document.getElementById('tval-'+p.ticker),cvEl=document.getElementById('cval-'+p.ticker),ldEl=document.getElementById('lot-disp-'+p.ticker);
     if(tvEl)tvEl.textContent=tv>0?'$'+fmt2(tv*p.target/100):'—';
     if(cvEl)cvEl.textContent=posVal(p)>0?'$'+fmt2(posVal(p)):'—';
     if(ldEl)ldEl.textContent=lo||'—';
     const sb=document.getElementById('sigbox-'+p.ticker);
     if(sb){
-      if(sig==='buy'&&pr>0&&tv>0){const tS=tv*p.target/100/pr,diff=Math.max(0,tS-lo);sb.innerHTML=<div class="signal-box buy"><div class="signal-title">⬆ AL SİNYALİ</div><div class="signal-row"><span>Hedef Adet</span><span class="signal-val" style="color:var(--green)">${tS.toFixed(3)}</span></div><div class="signal-row"><span>Alım Adedi</span><span class="signal-val" style="color:var(--green)">${diff.toFixed(3)}</span></div><div class="signal-row"><span>Alım Tutarı</span><span class="signal-val" style="color:var(--green)">$${fmt2(diff*pr)}</span></div></div>+rebalanceSuggestion(p.ticker);}
-      else if(sig==='sell'&&pr>0&&tv>0){const tS=tv*p.target/100/pr,diff=Math.max(0,lo-tS);sb.innerHTML=<div class="signal-box sell"><div class="signal-title">⬇ SAT SİNYALİ</div><div class="signal-row"><span>Hedef Adet</span><span class="signal-val" style="color:var(--red)">${tS.toFixed(3)}</span></div><div class="signal-row"><span>Satım Adedi</span><span class="signal-val" style="color:var(--red)">${diff.toFixed(3)}</span></div><div class="signal-row"><span>Satım Tutarı</span><span class="signal-val" style="color:var(--red)">$${fmt2(diff*pr)}</span></div></div>+rebalanceBuySuggestion(p.ticker);}
+      if(sig==='buy'&&pr>0&&tv>0){const tS=tv*p.target/100/pr,diff=Math.max(0,tS-lo);sb.innerHTML=`<div class="signal-box buy"><div class="signal-title">⬆ AL SİNYALİ</div><div class="signal-row"><span>Hedef Adet</span><span class="signal-val" style="color:var(--green)">${tS.toFixed(3)}</span></div><div class="signal-row"><span>Alım Adedi</span><span class="signal-val" style="color:var(--green)">${diff.toFixed(3)}</span></div><div class="signal-row"><span>Alım Tutarı</span><span class="signal-val" style="color:var(--green)">$${fmt2(diff*pr)}</span></div></div>`+rebalanceSuggestion(p.ticker);}
+      else if(sig==='sell'&&pr>0&&tv>0){const tS=tv*p.target/100/pr,diff=Math.max(0,lo-tS);sb.innerHTML=`<div class="signal-box sell"><div class="signal-title">⬇ SAT SİNYALİ</div><div class="signal-row"><span>Hedef Adet</span><span class="signal-val" style="color:var(--red)">${tS.toFixed(3)}</span></div><div class="signal-row"><span>Satım Adedi</span><span class="signal-val" style="color:var(--red)">${diff.toFixed(3)}</span></div><div class="signal-row"><span>Satım Tutarı</span><span class="signal-val" style="color:var(--red)">$${fmt2(diff*pr)}</span></div></div>`+rebalanceBuySuggestion(p.ticker);}
       else sb.innerHTML='';
     }
   });
   updateOverview(tv);renderAllocTable();renderPL();
-  // Fiyat geçmişi kaydet
   if(tv>0){
     const snap={date:new Date().toISOString(),prices:{},totalUSD:tv,totalTL:kurVal>0?tv*kurVal:0,kur:kurVal};
     PORT.forEach(p=>{snap.prices[p.ticker]=prices[p.ticker]||0;});
-    // Son kayıttan 5dk geçtiyse ekle
     const last=priceHistory[priceHistory.length-1];
     if(!last||new Date()-new Date(last.date)>300000)priceHistory.push(snap);
     if(priceHistory.length>200)priceHistory.shift();
@@ -407,15 +395,15 @@ function updateOverview(tv){
   document.getElementById('ov-total').textContent=tv>0?'$'+fmt2(tv):'—';
   let best={pct:-Infinity,t:''},worst={pct:Infinity,t:''};
   PORT.forEach(p=>{const sp=startPrices[p.ticker]||0,pr=prices[p.ticker]||0;if(sp>0&&pr>0){const pct=(pr-sp)/sp*100;if(pct>best.pct){best.pct=pct;best.t=p.ticker;}if(pct<worst.pct){worst.pct=pct;worst.t=p.ticker;}}});
-  document.getElementById('ov-best').textContent=best.t?${best.t} ${best.pct>=0?'+':''}${best.pct.toFixed(1)}%:'—';
-  document.getElementById('ov-worst').textContent=worst.t?${worst.t} ${worst.pct>=0?'+':''}${worst.pct.toFixed(1)}%:'—';
+  document.getElementById('ov-best').textContent=best.t?`${best.t} ${best.pct>=0?'+':''}${best.pct.toFixed(1)}%`:'—';
+  document.getElementById('ov-worst').textContent=worst.t?`${worst.t} ${worst.pct>=0?'+':''}${worst.pct.toFixed(1)}%`:'—';
 }
 
-function renderAllocTable(){const tbody=document.getElementById('alloc-tbody');if(!tbody)return;tbody.innerHTML='';PORT.forEach((p,pi)=>{const cp=curPct(p),dev=cp-p.target,dc=Math.abs(dev)<0.5?'var(--muted)':dev>0?'var(--red)':'var(--green)';tbody.innerHTML+=<tr><td style="color:${COLORS[pi]};font-weight:700">${p.ticker}</td><td>${p.target}%</td><td>${cp.toFixed(2)}%</td><td style="color:${dc}">${dev>=0?'+':''}${dev.toFixed(2)}%</td></tr>;});}
+function renderAllocTable(){const tbody=document.getElementById('alloc-tbody');if(!tbody)return;tbody.innerHTML='';PORT.forEach((p,pi)=>{const cp=curPct(p),dev=cp-p.target,dc=Math.abs(dev)<0.5?'var(--muted)':dev>0?'var(--red)':'var(--green)';tbody.innerHTML+=`<tr><td style="color:${COLORS[pi]};font-weight:700">${p.ticker}</td><td>${p.target}%</td><td>${cp.toFixed(2)}%</td><td style="color:${dc}">${dev>=0?'+':''}${dev.toFixed(2)}%</td></tr>`;});}
 
-function renderPL(){const c=document.getElementById('pl-container');if(!c)return;let html='',totalPL=0,totalCost=0;PORT.forEach((p,pi)=>{const sp=startPrices[p.ticker]||0,lo=startLots[p.ticker]||0,pr=prices[p.ticker]||0;if(!lo)return;const cost=sp*lo,cur=pr>0?pr*lo:cost,pl=cur-cost,pct=cost>0?pl/cost*100:0;totalPL+=pl;totalCost+=cost;const cls=pct>0?'pos':pct<0?'neg':'neu',arr=pct>0?'▲':pct<0?'▼':'●';html+=<div class="pl-row"><div><div style="font-weight:700;font-size:15px;color:${COLORS[pi]}">${p.ticker}</div><div style="font-size:11px;color:var(--muted)">${lo} × $${sp?fmt4(sp):'?'}</div></div><div class="pl-right"><div class="${cls}">${arr} ${pct>=0?'+':''}${pct.toFixed(2)}%</div><div class="${cls}" style="font-size:11px">${pl>=0?'+':''}$${fmt2(pl)}</div></div></div>;});c.innerHTML=html;const tPct=totalCost>0?totalPL/totalCost*100:0,tc=tPct>0?'pos':tPct<0?'neg':'neu';const e1=document.getElementById('pl-total-pct'),e2=document.getElementById('pl-total-usd');if(e1){e1.className=tc;e1.textContent=${tPct>=0?'+':''}${tPct.toFixed(2)}%;}if(e2){e2.className=tc;e2.textContent=${totalPL>=0?'+':''}$${fmt2(totalPL)};}const ov=document.getElementById('ov-daily');if(ov){ov.textContent=${tPct>=0?'+':''}${tPct.toFixed(2)}%;ov.style.color=tPct>0?'var(--green)':tPct<0?'var(--red)':'var(--muted)';}}
+function renderPL(){const c=document.getElementById('pl-container');if(!c)return;let html='',totalPL=0,totalCost=0;PORT.forEach((p,pi)=>{const sp=startPrices[p.ticker]||0,lo=startLots[p.ticker]||0,pr=prices[p.ticker]||0;if(!lo)return;const cost=sp*lo,cur=pr>0?pr*lo:cost,pl=cur-cost,pct=cost>0?pl/cost*100:0;totalPL+=pl;totalCost+=cost;const cls=pct>0?'pos':pct<0?'neg':'neu',arr=pct>0?'▲':pct<0?'▼':'●';html+=`<div class="pl-row"><div><div style="font-weight:700;font-size:15px;color:${COLORS[pi]}">${p.ticker}</div><div style="font-size:11px;color:var(--muted)">${lo} × $${sp?fmt4(sp):'?'}</div></div><div class="pl-right"><div class="${cls}">${arr} ${pct>=0?'+':''}${pct.toFixed(2)}%</div><div class="${cls}" style="font-size:11px">${pl>=0?'+':''}$${fmt2(pl)}</div></div></div>`;});c.innerHTML=html;const tPct=totalCost>0?totalPL/totalCost*100:0,tc=tPct>0?'pos':tPct<0?'neg':'neu';const e1=document.getElementById('pl-total-pct'),e2=document.getElementById('pl-total-usd');if(e1){e1.className=tc;e1.textContent=`${tPct>=0?'+':''}${tPct.toFixed(2)}%`;}if(e2){e2.className=tc;e2.textContent=`${totalPL>=0?'+':''}$${fmt2(totalPL)}`;}const ov=document.getElementById('ov-daily');if(ov){ov.textContent=`${tPct>=0?'+':''}${tPct.toFixed(2)}%`;ov.style.color=tPct>0?'var(--green)':tPct<0?'var(--red)':'var(--muted)';}}
 
-function checkSignal(ticker){const p=PORT.find(x=>x.ticker===ticker);if(!p)return;const sig=signalOf(p);if(sig==='hold')return;triggerAlert(sig,${ticker} ${sig==='buy'?'AL':'SAT'} SİNYALİ — %${curPct(p).toFixed(2)});}
+function checkSignal(ticker){const p=PORT.find(x=>x.ticker===ticker);if(!p)return;const sig=signalOf(p);if(sig==='hold')return;triggerAlert(sig,`${ticker} ${sig==='buy'?'AL':'SAT'} SİNYALİ — %${curPct(p).toFixed(2)}`);}
 
 function rebalanceSuggestion(buyTicker){
   const tv=totalVal();if(!tv)return'';
@@ -424,10 +412,10 @@ function rebalanceSuggestion(buyTicker){
   const sellers=PORT.filter(p=>p.ticker!==buyTicker&&curPct(p)>p.target&&prices[p.ticker]>0);
   sellers.sort((a,b)=>curPct(b)-b.target-(curPct(a)-a.target));
   if(sellers.length===0)return'';
-  let html=<div style="margin-top:8px;padding:10px 12px;background:rgba(0,229,255,.06);border:1px solid var(--accent);border-radius:8px"><div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--accent);margin-bottom:6px">⚖️ DENGE — Alım İçin Sat</div><div style="font-size:11px;color:var(--muted);margin-bottom:8px">Alım tutarı: $${fmt2(needed)}</div>;
+  let html=`<div style="margin-top:8px;padding:10px 12px;background:rgba(0,229,255,.06);border:1px solid var(--accent);border-radius:8px"><div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--accent);margin-bottom:6px">⚖️ DENGE — Alım İçin Sat</div><div style="font-size:11px;color:var(--muted);margin-bottom:8px">Alım tutarı: $${fmt2(needed)}</div>`;
   let remaining=needed;
-  for(const s of sellers){if(remaining<=0)break;const excess=posVal(s)-tv*s.target/100;if(excess<=0)continue;const sellAmt=Math.min(excess,remaining);const sellShares=sellAmt/(prices[s.ticker]||1);if(sellShares<=0.001)continue;html+=<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="color:var(--red)">↓ ${s.ticker} sat</span><span style="font-family:'Share Tech Mono',monospace;color:var(--red)">${sellShares.toFixed(3)} adet / $${fmt2(sellAmt)}</span></div>;remaining-=sellAmt;}
-  if(remaining>0.01)html+=<div style="font-size:11px;color:var(--muted);margin-top:4px">Ek nakit: $${fmt2(remaining)}</div>;
+  for(const s of sellers){if(remaining<=0)break;const excess=posVal(s)-tv*s.target/100;if(excess<=0)continue;const sellAmt=Math.min(excess,remaining);const sellShares=sellAmt/(prices[s.ticker]||1);if(sellShares<=0.001)continue;html+=`<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="color:var(--red)">↓ ${s.ticker} sat</span><span style="font-family:'Share Tech Mono',monospace;color:var(--red)">${sellShares.toFixed(3)} adet / $${fmt2(sellAmt)}</span></div>`;remaining-=sellAmt;}
+  if(remaining>0.01)html+=`<div style="font-size:11px;color:var(--muted);margin-top:4px">Ek nakit: $${fmt2(remaining)}</div>`;
   return html+'</div>';
 }
 
@@ -440,31 +428,24 @@ function rebalanceBuySuggestion(sellTicker){
   const buyers=PORT.filter(p=>p.ticker!==sellTicker&&curPct(p)<p.target);
   buyers.sort((a,b)=>(b.target-curPct(b))-(a.target-curPct(a)));
   if(buyers.length===0)return'';
-  let html=<div style="margin-top:8px;padding:10px 12px;background:rgba(0,255,136,.06);border:1px solid var(--green);border-radius:8px"><div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--green);margin-bottom:6px">⚖️ DENGE — Satış Tutarıyla Al</div><div style="font-size:11px;color:var(--muted);margin-bottom:8px">Satış: $${fmt2(sellAmount)}</div>;
+  let html=`<div style="margin-top:8px;padding:10px 12px;background:rgba(0,255,136,.06);border:1px solid var(--green);border-radius:8px"><div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--green);margin-bottom:6px">⚖️ DENGE — Satış Tutarıyla Al</div><div style="font-size:11px;color:var(--muted);margin-bottom:8px">Satış: $${fmt2(sellAmount)}</div>`;
   let remaining=sellAmount;
-  for(const b of buyers){if(remaining<=0)break;const pr=prices[b.ticker]||0;if(!pr)continue;const deficit=tv*b.target/100-posVal(b);if(deficit<=0)continue;const buyShares=Math.min(deficit,remaining)/pr;if(buyShares<=0.001)continue;html+=<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="color:var(--green)">↑ ${b.ticker} al</span><span style="font-family:'Share Tech Mono',monospace;color:var(--green)">${buyShares.toFixed(3)} adet / $${fmt2(buyShares*pr)}</span></div>;remaining-=buyShares*pr;}
-  if(remaining>0.01)html+=<div style="font-size:11px;color:var(--muted);margin-top:4px">Kalan: $${fmt2(remaining)}</div>;
+  for(const b of buyers){if(remaining<=0)break;const pr=prices[b.ticker]||0;if(!pr)continue;const deficit=tv*b.target/100-posVal(b);if(deficit<=0)continue;const buyShares=Math.min(deficit,remaining)/pr;if(buyShares<=0.001)continue;html+=`<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="color:var(--green)">↑ ${b.ticker} al</span><span style="font-family:'Share Tech Mono',monospace;color:var(--green)">${buyShares.toFixed(3)} adet / $${fmt2(buyShares*pr)}</span></div>`;remaining-=buyShares*pr;}
+  if(remaining>0.01)html+=`<div style="font-size:11px;color:var(--muted);margin-top:4px">Kalan: $${fmt2(remaining)}</div>`;
   return html+'</div>';
 }
 
 function triggerAlert(type,msg){if(type!=='info'){if(document.getElementById('vibrate-toggle').checked&&navigator.vibrate)navigator.vibrate(type==='buy'?[100,50,100]:[200,50,200,50,200]);if(document.getElementById('sound-toggle').checked){try{const ctx=new(window.AudioContext||window.webkitAudioContext)(),o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=type==='buy'?880:440;o.type='sine';g.gain.setValueAtTime(0.3,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.5);o.start();o.stop(ctx.currentTime+0.5);}catch(e){}}}const b=document.getElementById('alert-banner');document.getElementById('alert-text').textContent=(type==='buy'?'⬆ ':type==='sell'?'⬇ ':'ℹ ')+msg;b.className=type||'info';b.style.display='flex';setTimeout(closeAlert,5000);}
 function closeAlert(){document.getElementById('alert-banner').style.display='none';}
 
-// ── GRAFİKLER ─────────────────────────────────────────────────────────────────
 function setChartRange(r,btn){chartRange=r;document.querySelectorAll('.range-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');drawAllCharts();}
 
 function drawAllCharts(){
   if(priceHistory.length<2)return;
   const data=chartRange>0?priceHistory.slice(-chartRange):priceHistory;
   const dpr=window.devicePixelRatio||1;
-
-  // 1. Toplam USD
   drawLineChart('chart-total-usd',data,e=>[{v:e.totalUSD,c:'#00e5ff'}],160,'$',dpr);
-
-  // 2. Toplam TL
   drawLineChart('chart-total-tl',data,e=>[{v:e.totalTL,c:'#a78bfa'}],140,'₺',dpr);
-
-  // 3. Her varlık ayrı
   const c3=document.getElementById('chart-each');
   const ctx3=c3.getContext('2d');
   c3.width=(c3.offsetWidth||300)*dpr;c3.height=160*dpr;ctx3.scale(dpr,dpr);
@@ -474,28 +455,16 @@ function drawAllCharts(){
   const minV=Math.min(...allVals)*0.99,maxV=Math.max(...allVals)*1.01,range=maxV-minV||1;
   function toY3(v){return H3-15-(v-minV)/range*(H3-30);}
   function toX3(i){return 40+(i/(data.length-1||1))*(W3-50);}
-  drawGrid(ctx3,W3,H3);
-  drawYLabels(ctx3,minV,maxV,H3,'$');
-  PORT.forEach((p,pi)=>{
-    ctx3.strokeStyle=COLORS[pi];ctx3.lineWidth=1.5;ctx3.beginPath();let s=false;
-    data.forEach((e,i)=>{const v=e.prices[p.ticker];if(v>0){if(!s){ctx3.moveTo(toX3(i),toY3(v));s=true;}else ctx3.lineTo(toX3(i),toY3(v));}});ctx3.stroke();
-  });
+  drawGrid(ctx3,W3,H3);drawYLabels(ctx3,minV,maxV,H3,'$');
+  PORT.forEach((p,pi)=>{ctx3.strokeStyle=COLORS[pi];ctx3.lineWidth=1.5;ctx3.beginPath();let s=false;data.forEach((e,i)=>{const v=e.prices[p.ticker];if(v>0){if(!s){ctx3.moveTo(toX3(i),toY3(v));s=true;}else ctx3.lineTo(toX3(i),toY3(v));}});ctx3.stroke();});
   drawXLabels(ctx3,data,toX3,H3);
-  // Legend
-  const leg=document.getElementById('chart-legend');
-  leg.innerHTML=PORT.map((p,pi)=><div class="legend-item"><span class="legend-dot" style="background:${COLORS[pi]}"></span>${p.ticker}</div>).join('');
-
-  // 4. % büyüme
+  document.getElementById('chart-legend').innerHTML=PORT.map((p,pi)=>`<div class="legend-item"><span class="legend-dot" style="background:${COLORS[pi]}"></span>${p.ticker}</div>`).join('');
   const c4=document.getElementById('chart-pct');
   const ctx4=c4.getContext('2d');
   c4.width=(c4.offsetWidth||300)*dpr;c4.height=140*dpr;ctx4.scale(dpr,dpr);
   const W4=c4.offsetWidth||300,H4=140;ctx4.clearRect(0,0,W4,H4);
   drawGrid(ctx4,W4,H4);
-  const pctLines=PORT.map((p,pi)=>{
-    const firstVal=data.find(e=>e.prices[p.ticker]>0)?.prices[p.ticker]||0;
-    return{ticker:p.ticker,color:COLORS[pi],vals:data.map(e=>firstVal>0?(e.prices[p.ticker]-firstVal)/firstVal*100:0)};
-  });
-  // Toplam % de ekle
+  const pctLines=PORT.map((p,pi)=>{const firstVal=data.find(e=>e.prices[p.ticker]>0)?.prices[p.ticker]||0;return{ticker:p.ticker,color:COLORS[pi],vals:data.map(e=>firstVal>0?(e.prices[p.ticker]-firstVal)/firstVal*100:0)};});
   const firstTotal=data[0]?.totalUSD||0;
   pctLines.push({ticker:'Toplam',color:'#fff',vals:data.map(e=>firstTotal>0?(e.totalUSD-firstTotal)/firstTotal*100:0)});
   const allPcts=pctLines.flatMap(l=>l.vals);
@@ -507,9 +476,7 @@ function drawAllCharts(){
   drawYLabels(ctx4,minP,maxP,H4,'%');
   pctLines.forEach(l=>{ctx4.strokeStyle=l.color;ctx4.lineWidth=l.ticker==='Toplam'?2:1.5;ctx4.beginPath();l.vals.forEach((v,i)=>i===0?ctx4.moveTo(toXp(i),toYp(v)):ctx4.lineTo(toXp(i),toYp(v)));ctx4.stroke();});
   drawXLabels(ctx4,data,toXp,H4);
-  document.getElementById('chart-pct-legend').innerHTML=[...PORT.map((p,pi)=><div class="legend-item"><span class="legend-dot" style="background:${COLORS[pi]}"></span>${p.ticker}</div>),<div class="legend-item"><span class="legend-dot" style="background:#fff"></span>Toplam</div>].join('');
-
-  // 5. Günlük değişim bar
+  document.getElementById('chart-pct-legend').innerHTML=[...PORT.map((p,pi)=>`<div class="legend-item"><span class="legend-dot" style="background:${COLORS[pi]}"></span>${p.ticker}</div>`),`<div class="legend-item"><span class="legend-dot" style="background:#fff"></span>Toplam</div>`].join('');
   const c5=document.getElementById('chart-daily');
   const ctx5=c5.getContext('2d');
   c5.width=(c5.offsetWidth||300)*dpr;c5.height=120*dpr;ctx5.scale(dpr,dpr);
@@ -532,15 +499,13 @@ function drawLineChart(id,data,linesFn,h,prefix,dpr){
   const c=document.getElementById(id);const ctx=c.getContext('2d');
   c.width=(c.offsetWidth||300)*dpr;c.height=h*dpr;ctx.scale(dpr,dpr);
   const W=c.offsetWidth||300,H=h;ctx.clearRect(0,0,W,H);
-  const lines=linesFn(data[0]);
   const allVals=data.flatMap(e=>linesFn(e).map(l=>l.v)).filter(v=>v>0);
   if(allVals.length<2)return;
   const minV=Math.min(...allVals)*0.995,maxV=Math.max(...allVals)*1.005,range=maxV-minV||1;
   function toY(v){return H-15-(v-minV)/range*(H-30);}
   function toX(i){return 40+(i/(data.length-1||1))*(W-50);}
   drawGrid(ctx,W,H);drawYLabels(ctx,minV,maxV,H,prefix);
-  const firstLine=linesFn(data[0]);
-  firstLine.forEach((_,li)=>{
+  linesFn(data[0]).forEach((_,li)=>{
     const vals=data.map(e=>linesFn(e)[li]);
     const col=vals[0].c;
     ctx.beginPath();ctx.moveTo(toX(0),H-15);
@@ -558,25 +523,24 @@ function drawGrid(ctx,W,H){ctx.strokeStyle='rgba(255,255,255,.05)';ctx.lineWidth
 function drawYLabels(ctx,minV,maxV,H,prefix){ctx.fillStyle='rgba(90,106,122,.7)';ctx.font='9px Share Tech Mono';ctx.textAlign='right';for(let g=0;g<5;g++){const v=minV+g*(maxV-minV)/4;const label=Math.abs(v)>=1000?(v/1000).toFixed(1)+'K':v.toFixed(1);ctx.fillText(prefix+label,36,H-15-g*(H-30)/4+4);}}
 function drawXLabels(ctx,data,toX,H){ctx.fillStyle='rgba(90,106,122,.7)';ctx.font='9px Share Tech Mono';ctx.textAlign='center';const step=Math.max(1,Math.floor(data.length/5));for(let i=0;i<data.length;i+=step){const d=new Date(data[i].date);ctx.fillText(d.getDate()+'/'+(d.getMonth()+1),toX(i),H-2);}}
 
-// ── FETCH ─────────────────────────────────────────────────────────────────────
 async function fetchAllPrices(){
   document.getElementById('refresh-icon').innerHTML='<span class="spinner"></span>';
   let fetched=0;
   for(const p of PORT){
     let cur=0,prevC=0,marketState='CLOSED';
-    try{const url=https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(p.ticker)}?interval=1d&range=2d;const res=await fetch(https://api.allorigins.win/raw?url=${encodeURIComponent(url)});if(res.ok){const d=await res.json();const m=d?.chart?.result?.[0]?.meta;if(m){cur=m.preMarketPrice||m.regularMarketPrice||0;prevC=m.previousClose||m.chartPreviousClose||0;marketState=m.marketState||'CLOSED';}}}catch(e){}
-    if(!cur){try{const url=https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(p.ticker)}?interval=1d&range=2d;const res=await fetch(https://corsproxy.io/?${encodeURIComponent(url)});if(res.ok){const d=await res.json();const m=d?.chart?.result?.[0]?.meta;if(m){cur=m.preMarketPrice||m.regularMarketPrice||0;prevC=m.previousClose||m.chartPreviousClose||0;marketState=m.marketState||'CLOSED';}}}catch(e){}}
-    if(!cur){try{const res=await fetch(https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(p.ticker)}?interval=1d&range=2d);if(res.ok){const d=await res.json();const m=d?.chart?.result?.[0]?.meta;if(m){cur=m.preMarketPrice||m.regularMarketPrice||0;prevC=m.previousClose||m.chartPreviousClose||0;marketState=m.marketState||'CLOSED';}}}catch(e){}}
+    try{const url=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(p.ticker)}?interval=1d&range=2d`;const res=await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);if(res.ok){const d=await res.json();const m=d?.chart?.result?.[0]?.meta;if(m){cur=m.preMarketPrice||m.regularMarketPrice||0;prevC=m.previousClose||m.chartPreviousClose||0;marketState=m.marketState||'CLOSED';}}}catch(e){}
+    if(!cur){try{const url=`https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(p.ticker)}?interval=1d&range=2d`;const res=await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);if(res.ok){const d=await res.json();const m=d?.chart?.result?.[0]?.meta;if(m){cur=m.preMarketPrice||m.regularMarketPrice||0;prevC=m.previousClose||m.chartPreviousClose||0;marketState=m.marketState||'CLOSED';}}}catch(e){}}
+    if(!cur){try{const res=await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(p.ticker)}?interval=1d&range=2d`);if(res.ok){const d=await res.json();const m=d?.chart?.result?.[0]?.meta;if(m){cur=m.preMarketPrice||m.regularMarketPrice||0;prevC=m.previousClose||m.chartPreviousClose||0;marketState=m.marketState||'CLOSED';}}}catch(e){}}
     if(cur>0){
       prevClose[p.ticker]=prevC||prices[p.ticker]||cur;prices[p.ticker]=cur;
       const inp=document.getElementById('price-'+p.ticker);if(inp&&!inp.matches(':focus'))inp.value=cur.toFixed(2);
       const pEl=document.getElementById('pchange-'+p.ticker);
-      if(pEl&&prevC>0){const ch=(cur-prevC)/prevC*100;const st=marketState==='PRE'?'⏰':marketState==='POST'?'🌙':marketState==='REGULAR'?'🟢':'🔴';pEl.textContent=${st} ${ch>=0?'+':''}${ch.toFixed(2)}%;pEl.style.color=ch>0?'var(--green)':ch<0?'var(--red)':'var(--muted)';}
+      if(pEl&&prevC>0){const ch=(cur-prevC)/prevC*100;const st=marketState==='PRE'?'⏰':marketState==='POST'?'🌙':marketState==='REGULAR'?'🟢':'🔴';pEl.textContent=`${st} ${ch>=0?'+':''}${ch.toFixed(2)}%`;pEl.style.color=ch>0?'var(--green)':ch<0?'var(--red)':'var(--muted)';}
       fetched++;
     }
   }
   const now=new Date();
-  document.getElementById('last-update').textContent=Son: ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')};
+  document.getElementById('last-update').textContent=`Son: ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
   document.getElementById('refresh-icon').textContent='⟳';
   saveState();refreshDisplays();
   PORT.forEach(p=>checkSignal(p.ticker));
@@ -593,6 +557,5 @@ function saveAndCopy(){const code=btoa(unescape(encodeURIComponent(JSON.stringif
 function showLoadInput(){const w=document.getElementById('load-wrap');w.style.display=w.style.display==='none'?'block':'none';}
 function loadFromCode(){try{const s=JSON.parse(decodeURIComponent(escape(atob(document.getElementById('load-code').value.trim()))));if(s.prices)prices=s.prices;if(s.prevClose)prevClose=s.prevClose;if(s.startPrices)startPrices=s.startPrices;if(s.startLots)startLots=s.startLots;if(s.priceHistory)priceHistory=s.priceHistory;fillInputs();saveState();refreshDisplays();document.getElementById('load-wrap').style.display='none';triggerAlert('buy','Veriler yüklendi!');}catch(e){triggerAlert('sell','Geçersiz kod');}}
 </script>
-
 </body>
 </html>
