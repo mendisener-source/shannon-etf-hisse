@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
@@ -27,14 +28,14 @@ header{position:sticky;top:0;z-index:100;background:#0d1117;border-bottom:1px so
 .h-total{font-size:22px;font-weight:700;font-family:'Share Tech Mono',monospace;color:var(--accent)}
 .h-label{font-size:10px;color:var(--muted);text-align:right}
 .tab-bar{display:flex;background:var(--surface);border-bottom:1px solid var(--border);
-  position:sticky;top:62px;z-index:99}
-.tab{flex:1;padding:10px 4px;text-align:center;font-size:11px;font-weight:600;
+  position:sticky;top:62px;z-index:99;overflow-x:auto}
+.tab{flex:1;min-width:70px;padding:10px 4px;text-align:center;font-size:10px;font-weight:600;
   letter-spacing:1px;color:var(--muted);border-bottom:2px solid transparent;
-  cursor:pointer;transition:all .2s;text-transform:uppercase}
+  cursor:pointer;transition:all .2s;text-transform:uppercase;white-space:nowrap}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(0,229,255,.05)}
 .section{display:none;padding:12px}.section.active{display:block}
 .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;position:relative;overflow:hidden}
-.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),transparent)}
+.card.offense::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--bull),transparent)}
 .badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase}
 .badge.hold{background:rgba(90,106,122,.2);color:var(--muted);border:1px solid var(--muted)}
 .badge.buy{background:rgba(0,255,136,.15);color:var(--green);border:1px solid var(--green);animation:pg 1.5s infinite}
@@ -105,20 +106,23 @@ header{position:sticky;top:0;z-index:100;background:#0d1117;border-bottom:1px so
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--muted);
   border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.currency-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;
-  background:rgba(0,229,255,.1);border:1px solid var(--accent);color:var(--accent);margin-left:6px;letter-spacing:1px}
+canvas{width:100%;border-radius:8px;background:var(--bg)}
+.range-btns{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.range-btn{padding:4px 10px;border-radius:6px;border:1px solid var(--border);
+  background:transparent;color:var(--muted);font-size:11px;cursor:pointer;
+  font-family:'Rajdhani',sans-serif;font-weight:700}
+.range-btn.active{border-color:var(--accent);background:rgba(0,229,255,.1);color:var(--accent)}
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 </style>
 </head>
 <body>
-
-<div id="alert-banner">
-  <span id="alert-text"></span>
-  <span class="alert-close" onclick="closeAlert()">✕</span>
-</div>
+<div id="alert-banner"><span id="alert-text"></span><span class="alert-close" onclick="closeAlert()">✕</span></div>
 
 <header>
   <div>
-    <div class="h-title">SHANNON ETF <span class="currency-badge">USD</span></div>
+    <div class="h-title">SHANNON ETF <span style="font-size:11px;background:rgba(0,229,255,.1);border:1px solid var(--accent);border-radius:4px;padding:2px 6px;-webkit-text-fill-color:var(--accent)">USD</span></div>
     <div class="h-sub" id="last-update">Son güncelleme: —</div>
   </div>
   <div>
@@ -128,8 +132,9 @@ header{position:sticky;top:0;z-index:100;background:#0d1117;border-bottom:1px so
 </header>
 
 <div class="tab-bar">
-  <div class="tab active" data-tab="signals" onclick="showTab(this)">📡 Sinyaller</div>
+  <div class="tab active" data-tab="signals" onclick="showTab(this)">📡 Sinyal</div>
   <div class="tab" data-tab="portfolio" onclick="showTab(this)">📊 Portföy</div>
+  <div class="tab" data-tab="chart" onclick="showTab(this)">📈 Grafik</div>
   <div class="tab" data-tab="pl" onclick="showTab(this)">💰 K/Z</div>
   <div class="tab" data-tab="settings" onclick="showTab(this)">⚙️ Ayarlar</div>
 </div>
@@ -147,6 +152,50 @@ header{position:sticky;top:0;z-index:100;background:#0d1117;border-bottom:1px so
   <div class="card">
     <table class="tbl"><thead><tr><th>Ticker</th><th>Hedef %</th><th>Mevcut %</th><th>Sapma</th></tr></thead>
     <tbody id="alloc-tbody"></tbody></table>
+  </div>
+</div>
+
+<!-- GRAFİK SEKMESİ -->
+
+<div id="tab-chart" class="section">
+  <!-- Kur bilgisi -->
+  <div style="background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.2);border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+    <div style="font-size:11px;color:var(--muted)">USD/TL <span id="chart-kur-time" style="font-size:10px"></span></div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:16px;color:var(--accent)" id="chart-kur-val">—</div>
+  </div>
+
+  <div class="card" style="padding:10px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="sec-title" style="margin:0;border:none;padding:0"><span class="dot" style="background:var(--accent)"></span>TOPLAM PORTFÖY ($)</div>
+      <div class="range-btns">
+        <button class="range-btn active" onclick="setChartRange(30,this)">1A</button>
+        <button class="range-btn" onclick="setChartRange(90,this)">3A</button>
+        <button class="range-btn" onclick="setChartRange(0,this)">TÜM</button>
+      </div>
+    </div>
+    <canvas id="chart-total-usd" height="160"></canvas>
+  </div>
+
+  <div class="card" style="padding:10px;margin-top:0">
+    <div class="sec-title" style="margin-bottom:8px"><span class="dot" style="background:var(--yellow)"></span>TOPLAM PORTFÖY (₺)</div>
+    <canvas id="chart-total-tl" height="140"></canvas>
+  </div>
+
+  <div class="card" style="padding:10px;margin-top:0">
+    <div class="sec-title" style="margin-bottom:8px"><span class="dot" style="background:var(--green)"></span>HER VARLIK — $ GELİŞİMİ</div>
+    <canvas id="chart-each" height="160"></canvas>
+    <div class="legend" id="chart-legend"></div>
+  </div>
+
+  <div class="card" style="padding:10px;margin-top:0">
+    <div class="sec-title" style="margin-bottom:8px"><span class="dot" style="background:var(--bull)"></span>% BÜYÜME (Başlangıçtan)</div>
+    <canvas id="chart-pct" height="140"></canvas>
+    <div class="legend" id="chart-pct-legend"></div>
+  </div>
+
+  <div class="card" style="padding:10px;margin-top:0">
+    <div class="sec-title" style="margin-bottom:8px"><span class="dot" style="background:var(--yellow)"></span>GÜNLÜK DEĞİŞİM (%)</div>
+    <canvas id="chart-daily" height="120"></canvas>
   </div>
 </div>
 
@@ -198,13 +247,43 @@ const PORT=[
   {ticker:'TSLL', name:'Tesla 2x Bull', target:20, buyLim:18, sellLim:22},
   {ticker:'TMF',  name:'T-Bond 3x Bull',target:20, buyLim:18, sellLim:22},
 ];
+const COLORS=['#00e5ff','#ff6d00','#00ff88','#ffd700','#a78bfa'];
 
 let prices={},prevClose={},startPrices={},startLots={},arTimer=null;
+let priceHistory=[]; // [{date, prices:{ticker:val}, totalUSD, totalTL, kur}]
+let kurVal=0;
+let chartRange=30;
 
-window.onload=()=>{loadState();buildSignalCards();buildLotInputs();refreshDisplays();fetchAllPrices();startAutoRefresh();};
+window.onload=()=>{loadState();buildSignalCards();buildLotInputs();fillInputs();refreshDisplays();fetchAllPrices();fetchKur();startAutoRefresh();};
 window.onbeforeunload=()=>{saveState();};
 
-function showTab(el){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');document.getElementById('tab-'+el.dataset.tab).classList.add('active');}
+// ── KUR ───────────────────────────────────────────────────────────────────────
+async function fetchKur(){
+  try{
+    const url='https://query1.finance.yahoo.com/v8/finance/chart/USDTRY=X?interval=1d&range=1d';
+    let res;
+    try{res=await fetch(https://api.allorigins.win/raw?url=${encodeURIComponent(url)});}catch(e){res=await fetch(url);}
+    if(!res.ok)throw new Error();
+    const d=await res.json();
+    const m=d?.chart?.result?.[0]?.meta;
+    if(m&&m.regularMarketPrice>0){
+      kurVal=m.regularMarketPrice;
+      document.getElementById('chart-kur-val').textContent=kurVal.toFixed(2);
+      document.getElementById('chart-kur-time').textContent=new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
+    }
+  }catch(e){}
+}
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+function showTab(el){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-'+el.dataset.tab).classList.add('active');
+  if(el.dataset.tab==='chart')setTimeout(drawAllCharts,50);
+}
+
+function fillInputs(){PORT.forEach(p=>{const i=document.getElementById('price-'+p.ticker);if(i&&prices[p.ticker])i.value=prices[p.ticker].toFixed(2);const s=document.getElementById('sp-'+p.ticker);if(s&&startPrices[p.ticker])s.value=startPrices[p.ticker];const l=document.getElementById('sl-'+p.ticker);if(l&&startLots[p.ticker])l.value=startLots[p.ticker];});}
 
 const fmt2=n=>n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 const fmt4=n=>n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:4});
@@ -216,16 +295,14 @@ function signalOf(p){const pr=prices[p.ticker]||0,lo=startLots[p.ticker]||0;if(!
 function buildSignalCards(){
   const c=document.getElementById('tab-signals');c.innerHTML='';
   const h=document.createElement('div');h.className='sec-title';
-  h.innerHTML=`<span class="dot" style="background:var(--accent)"></span>PORTFÖY — %${PORT.reduce((s,p)=>s+p.target,0)}`;
+  h.innerHTML=<span class="dot" style="background:var(--accent)"></span>PORTFÖY — %${PORT.reduce((s,p)=>s+p.target,0)};
   c.appendChild(h);
-  PORT.forEach(p=>{
-    const div=document.createElement('div');div.className='card';
+  PORT.forEach((p,pi)=>{
+    const div=document.createElement('div');div.className='card offense';
     div.innerHTML=`
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
-        <div>
-          <div style="font-size:20px;font-weight:700;color:var(--accent)">${p.ticker}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px">${p.name}</div>
-        </div>
+        <div><div style="font-size:20px;font-weight:700;color:${COLORS[pi]}">${p.ticker}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">${p.name}</div></div>
         <div style="text-align:right">
           <span class="badge hold" id="badge-${p.ticker}">● BEKLİYOR</span>
           <div id="pchange-${p.ticker}" style="font-size:11px;margin-top:4px;font-family:'Share Tech Mono',monospace;color:var(--muted)"></div>
@@ -238,12 +315,10 @@ function buildSignalCards(){
       <div style="display:flex;justify-content:space-between;margin-top:8px;padding:0 2px">
         <span style="font-size:11px;color:var(--muted)">MEVCUT AĞIRLIK</span>
         <span style="font-family:'Share Tech Mono',monospace;font-size:13px">
-          <span id="cpct-${p.ticker}">—</span>
-          <span style="color:var(--muted)"> / ${p.target}%</span>
-        </span>
+          <span id="cpct-${p.ticker}">—</span><span style="color:var(--muted)"> / ${p.target}%</span></span>
       </div>
       <div style="font-size:10px;color:var(--muted);display:flex;justify-content:space-between;margin-top:8px">
-        <span style="color:var(--green)">AL ≤ ${p.buyLim}%</span><span>BANT ±%3</span>
+        <span style="color:var(--green)">AL ≤ ${p.buyLim}%</span><span>BANT ±%2</span>
         <span style="color:var(--red)">SAT ≥ ${p.sellLim}%</span>
       </div>
       <div class="band-bar">
@@ -262,25 +337,25 @@ function buildSignalCards(){
   });
 }
 
-function commitPrice(t,v){const n=parseFloat(v);if(!isNaN(n)&&n>0)prices[t]=n;saveState();refreshDisplays();checkSignal(t);}
+function commitPrice(t,v){const n=parseFloat(v);if(!isNaN(n)&&n>0){prevClose[t]=prices[t]||n;prices[t]=n;}saveState();refreshDisplays();checkSignal(t);}
 function commitSP(t,v){const n=parseFloat(v);startPrices[t]=isNaN(n)?0:n;saveState();refreshDisplays();}
 function commitSL(t,v){const n=parseFloat(v);startLots[t]=isNaN(n)?0:n;saveState();refreshDisplays();}
 
 function buildLotInputs(){
   const c=document.getElementById('lot-card');
-  c.innerHTML=PORT.map((p,i)=>`
-    <div style="padding:14px;${i<PORT.length-1?'border-bottom:1px solid var(--border)':''}">
-      <div style="font-size:16px;font-weight:700;margin-bottom:10px;color:var(--accent)">
+  c.innerHTML=PORT.map((p,pi)=>`
+    <div style="padding:14px;${pi<PORT.length-1?'border-bottom:1px solid var(--border)':''}">
+      <div style="font-size:16px;font-weight:700;margin-bottom:10px;color:${COLORS[pi]}">
         ${p.ticker} <span style="font-size:11px;color:var(--muted);font-weight:400">${p.name}</span></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><label class="inp-label">ORT. MALİYET ($)</label>
-          <input class="inp inp-sm" type="number" inputmode="decimal" step="0.01"
-            placeholder="0.00" id="sp-${p.ticker}" value="${startPrices[p.ticker]||''}"
+          <input class="inp inp-sm" type="number" inputmode="decimal" step="0.01" placeholder="0.00"
+            id="sp-${p.ticker}" value="${startPrices[p.ticker]||''}"
             onfocus="this.style.borderColor='var(--accent)'"
             onblur="this.style.borderColor='var(--border)'; commitSP('${p.ticker}', this.value)"></div>
-        <div><label class="inp-label">ADET (Hisse)</label>
-          <input class="inp inp-sm" type="number" inputmode="decimal" step="0.001"
-            placeholder="0" id="sl-${p.ticker}" value="${startLots[p.ticker]||''}"
+        <div><label class="inp-label">ADET</label>
+          <input class="inp inp-sm" type="number" inputmode="decimal" step="0.001" placeholder="0"
+            id="sl-${p.ticker}" value="${startLots[p.ticker]||''}"
             onfocus="this.style.borderColor='var(--accent)'"
             onblur="this.style.borderColor='var(--border)'; commitSL('${p.ticker}', this.value)"></div>
       </div>
@@ -303,23 +378,28 @@ function refreshDisplays(){
     const fillCol=sig==='buy'?'var(--green)':sig==='sell'?'var(--red)':'var(--accent)';
     const fill=document.getElementById('bfill-'+p.ticker);
     if(fill){fill.style.width=curPos+'%';fill.style.background=fillCol;}
-    ['buy','sell','cur'].forEach(k=>{const el=document.getElementById(`bm-${k}-${p.ticker}`);if(el)el.style.left=(k==='buy'?buyPos:k==='sell'?sellPos:curPos)+'%';});
+    ['buy','sell','cur'].forEach(k=>{const el=document.getElementById(bm-${k}-${p.ticker});if(el)el.style.left=(k==='buy'?buyPos:k==='sell'?sellPos:curPos)+'%';});
     const tvEl=document.getElementById('tval-'+p.ticker),cvEl=document.getElementById('cval-'+p.ticker),ldEl=document.getElementById('lot-disp-'+p.ticker);
     if(tvEl)tvEl.textContent=tv>0?'$'+fmt2(tv*p.target/100):'—';
     if(cvEl)cvEl.textContent=posVal(p)>0?'$'+fmt2(posVal(p)):'—';
     if(ldEl)ldEl.textContent=lo||'—';
     const sb=document.getElementById('sigbox-'+p.ticker);
     if(sb){
-      if(sig==='buy'&&pr>0&&tv>0){
-        const tShares=(tv*p.target/100/pr),diff=Math.max(0,tShares-lo);
-        sb.innerHTML=`<div class="signal-box buy"><div class="signal-title">⬆ AL SİNYALİ</div><div class="signal-row"><span>Hedef Adet</span><span class="signal-val" style="color:var(--green)">${tShares.toFixed(3)}</span></div><div class="signal-row"><span>Alım Adedi</span><span class="signal-val" style="color:var(--green)">${diff.toFixed(3)}</span></div><div class="signal-row"><span>Alım Tutarı</span><span class="signal-val" style="color:var(--green)">$${fmt2(diff*pr)}</span></div></div>`;
-      }else if(sig==='sell'&&pr>0&&tv>0){
-        const tShares=(tv*p.target/100/pr),diff=Math.max(0,lo-tShares);
-        sb.innerHTML=`<div class="signal-box sell"><div class="signal-title">⬇ SAT SİNYALİ</div><div class="signal-row"><span>Hedef Adet</span><span class="signal-val" style="color:var(--red)">${tShares.toFixed(3)}</span></div><div class="signal-row"><span>Satım Adedi</span><span class="signal-val" style="color:var(--red)">${diff.toFixed(3)}</span></div><div class="signal-row"><span>Satım Tutarı</span><span class="signal-val" style="color:var(--red)">$${fmt2(diff*pr)}</span></div></div>`;
-      }else sb.innerHTML='';
+      if(sig==='buy'&&pr>0&&tv>0){const tS=tv*p.target/100/pr,diff=Math.max(0,tS-lo);sb.innerHTML=<div class="signal-box buy"><div class="signal-title">⬆ AL SİNYALİ</div><div class="signal-row"><span>Hedef Adet</span><span class="signal-val" style="color:var(--green)">${tS.toFixed(3)}</span></div><div class="signal-row"><span>Alım Adedi</span><span class="signal-val" style="color:var(--green)">${diff.toFixed(3)}</span></div><div class="signal-row"><span>Alım Tutarı</span><span class="signal-val" style="color:var(--green)">$${fmt2(diff*pr)}</span></div></div>+rebalanceSuggestion(p.ticker);}
+      else if(sig==='sell'&&pr>0&&tv>0){const tS=tv*p.target/100/pr,diff=Math.max(0,lo-tS);sb.innerHTML=<div class="signal-box sell"><div class="signal-title">⬇ SAT SİNYALİ</div><div class="signal-row"><span>Hedef Adet</span><span class="signal-val" style="color:var(--red)">${tS.toFixed(3)}</span></div><div class="signal-row"><span>Satım Adedi</span><span class="signal-val" style="color:var(--red)">${diff.toFixed(3)}</span></div><div class="signal-row"><span>Satım Tutarı</span><span class="signal-val" style="color:var(--red)">$${fmt2(diff*pr)}</span></div></div>+rebalanceBuySuggestion(p.ticker);}
+      else sb.innerHTML='';
     }
   });
   updateOverview(tv);renderAllocTable();renderPL();
+  // Fiyat geçmişi kaydet
+  if(tv>0){
+    const snap={date:new Date().toISOString(),prices:{},totalUSD:tv,totalTL:kurVal>0?tv*kurVal:0,kur:kurVal};
+    PORT.forEach(p=>{snap.prices[p.ticker]=prices[p.ticker]||0;});
+    // Son kayıttan 5dk geçtiyse ekle
+    const last=priceHistory[priceHistory.length-1];
+    if(!last||new Date()-new Date(last.date)>300000)priceHistory.push(snap);
+    if(priceHistory.length>200)priceHistory.shift();
+  }
 }
 
 function updateOverview(tv){
@@ -327,48 +407,27 @@ function updateOverview(tv){
   document.getElementById('ov-total').textContent=tv>0?'$'+fmt2(tv):'—';
   let best={pct:-Infinity,t:''},worst={pct:Infinity,t:''};
   PORT.forEach(p=>{const sp=startPrices[p.ticker]||0,pr=prices[p.ticker]||0;if(sp>0&&pr>0){const pct=(pr-sp)/sp*100;if(pct>best.pct){best.pct=pct;best.t=p.ticker;}if(pct<worst.pct){worst.pct=pct;worst.t=p.ticker;}}});
-  document.getElementById('ov-best').textContent=best.t?`${best.t} ${best.pct>=0?'+':''}${best.pct.toFixed(1)}%`:'—';
-  document.getElementById('ov-worst').textContent=worst.t?`${worst.t} ${worst.pct>=0?'+':''}${worst.pct.toFixed(1)}%`:'—';
+  document.getElementById('ov-best').textContent=best.t?${best.t} ${best.pct>=0?'+':''}${best.pct.toFixed(1)}%:'—';
+  document.getElementById('ov-worst').textContent=worst.t?${worst.t} ${worst.pct>=0?'+':''}${worst.pct.toFixed(1)}%:'—';
 }
 
-function renderAllocTable(){
-  const tbody=document.getElementById('alloc-tbody');if(!tbody)return;tbody.innerHTML='';
-  PORT.forEach(p=>{const cp=curPct(p),dev=cp-p.target,dc=Math.abs(dev)<0.5?'var(--muted)':dev>0?'var(--red)':'var(--green)';tbody.innerHTML+=`<tr><td style="color:var(--accent);font-weight:700">${p.ticker}</td><td>${p.target}%</td><td>${cp.toFixed(2)}%</td><td style="color:${dc}">${dev>=0?'+':''}${dev.toFixed(2)}%</td></tr>`;});
-}
+function renderAllocTable(){const tbody=document.getElementById('alloc-tbody');if(!tbody)return;tbody.innerHTML='';PORT.forEach((p,pi)=>{const cp=curPct(p),dev=cp-p.target,dc=Math.abs(dev)<0.5?'var(--muted)':dev>0?'var(--red)':'var(--green)';tbody.innerHTML+=<tr><td style="color:${COLORS[pi]};font-weight:700">${p.ticker}</td><td>${p.target}%</td><td>${cp.toFixed(2)}%</td><td style="color:${dc}">${dev>=0?'+':''}${dev.toFixed(2)}%</td></tr>;});}
 
-function renderPL(){
-  const c=document.getElementById('pl-container');if(!c)return;
-  let html='',totalPL=0,totalCost=0;
-  PORT.forEach(p=>{
-    const sp=startPrices[p.ticker]||0,lo=startLots[p.ticker]||0,pr=prices[p.ticker]||0;
-    if(!lo)return;
-    const cost=sp*lo,cur=pr>0?pr*lo:cost,pl=cur-cost,pct=cost>0?pl/cost*100:0;
-    totalPL+=pl;totalCost+=cost;
-    const cls=pct>0?'pos':pct<0?'neg':'neu',arr=pct>0?'▲':pct<0?'▼':'●';
-    html+=`<div class="pl-row"><div><div style="font-weight:700;font-size:15px;color:var(--accent)">${p.ticker}</div><div style="font-size:11px;color:var(--muted)">${lo} × $${sp?fmt4(sp):'?'}</div></div><div class="pl-right"><div class="${cls}">${arr} ${pct>=0?'+':''}${pct.toFixed(2)}%</div><div class="${cls}" style="font-size:11px">${pl>=0?'+':''}$${fmt2(pl)}</div></div></div>`;
-  });
-  c.innerHTML=html;
-  const tPct=totalCost>0?totalPL/totalCost*100:0,tc=tPct>0?'pos':tPct<0?'neg':'neu';
-  const e1=document.getElementById('pl-total-pct'),e2=document.getElementById('pl-total-usd');
-  if(e1){e1.className=tc;e1.textContent=`${tPct>=0?'+':''}${tPct.toFixed(2)}%`;}
-  if(e2){e2.className=tc;e2.textContent=`${totalPL>=0?'+':''}$${fmt2(totalPL)}`;}
-  const ov=document.getElementById('ov-daily');
-  if(ov){ov.textContent=`${tPct>=0?'+':''}${tPct.toFixed(2)}%`;ov.style.color=tPct>0?'var(--green)':tPct<0?'var(--red)':'var(--muted)';}
-}
+function renderPL(){const c=document.getElementById('pl-container');if(!c)return;let html='',totalPL=0,totalCost=0;PORT.forEach((p,pi)=>{const sp=startPrices[p.ticker]||0,lo=startLots[p.ticker]||0,pr=prices[p.ticker]||0;if(!lo)return;const cost=sp*lo,cur=pr>0?pr*lo:cost,pl=cur-cost,pct=cost>0?pl/cost*100:0;totalPL+=pl;totalCost+=cost;const cls=pct>0?'pos':pct<0?'neg':'neu',arr=pct>0?'▲':pct<0?'▼':'●';html+=<div class="pl-row"><div><div style="font-weight:700;font-size:15px;color:${COLORS[pi]}">${p.ticker}</div><div style="font-size:11px;color:var(--muted)">${lo} × $${sp?fmt4(sp):'?'}</div></div><div class="pl-right"><div class="${cls}">${arr} ${pct>=0?'+':''}${pct.toFixed(2)}%</div><div class="${cls}" style="font-size:11px">${pl>=0?'+':''}$${fmt2(pl)}</div></div></div>;});c.innerHTML=html;const tPct=totalCost>0?totalPL/totalCost*100:0,tc=tPct>0?'pos':tPct<0?'neg':'neu';const e1=document.getElementById('pl-total-pct'),e2=document.getElementById('pl-total-usd');if(e1){e1.className=tc;e1.textContent=${tPct>=0?'+':''}${tPct.toFixed(2)}%;}if(e2){e2.className=tc;e2.textContent=${totalPL>=0?'+':''}$${fmt2(totalPL)};}const ov=document.getElementById('ov-daily');if(ov){ov.textContent=${tPct>=0?'+':''}${tPct.toFixed(2)}%;ov.style.color=tPct>0?'var(--green)':tPct<0?'var(--red)':'var(--muted)';}}
 
-function checkSignal(ticker){const p=PORT.find(x=>x.ticker===ticker);if(!p)return;const sig=signalOf(p);if(sig==='hold')return;triggerAlert(sig,`${ticker} ${sig==='buy'?'AL':'SAT'} SİNYALİ — %${curPct(p).toFixed(2)}`);}
+function checkSignal(ticker){const p=PORT.find(x=>x.ticker===ticker);if(!p)return;const sig=signalOf(p);if(sig==='hold')return;triggerAlert(sig,${ticker} ${sig==='buy'?'AL':'SAT'} SİNYALİ — %${curPct(p).toFixed(2)});}
 
 function rebalanceSuggestion(buyTicker){
   const tv=totalVal();if(!tv)return'';
   const buyP=PORT.find(p=>p.ticker===buyTicker);if(!buyP)return'';
-  const buyPr=prices[buyTicker]||0;if(!buyPr)return'';
   const needed=tv*buyP.target/100-posVal(buyP);if(needed<=0)return'';
-  const sellers=PORT.filter(p=>p.ticker!==buyTicker&&curPct(p)>p.target);
+  const sellers=PORT.filter(p=>p.ticker!==buyTicker&&curPct(p)>p.target&&prices[p.ticker]>0);
   sellers.sort((a,b)=>curPct(b)-b.target-(curPct(a)-a.target));
   if(sellers.length===0)return'';
-  let html=`<div style="margin-top:8px;padding:10px 12px;background:rgba(0,229,255,.06);border:1px solid var(--accent);border-radius:8px"><div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--accent);margin-bottom:8px">⚖️ DENGE ÖNERİSİ — Alım İçin Sat</div>`;
+  let html=<div style="margin-top:8px;padding:10px 12px;background:rgba(0,229,255,.06);border:1px solid var(--accent);border-radius:8px"><div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--accent);margin-bottom:6px">⚖️ DENGE — Alım İçin Sat</div><div style="font-size:11px;color:var(--muted);margin-bottom:8px">Alım tutarı: $${fmt2(needed)}</div>;
   let remaining=needed;
-  for(const s of sellers){if(remaining<=0)break;const excess=posVal(s)-tv*s.target/100;if(excess<=0)continue;const sellShares=(Math.min(excess,remaining)/(prices[s.ticker]||1));if(sellShares<=0.001)continue;html+=`<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="color:var(--red)">↓ ${s.ticker} sat</span><span style="font-family:'Share Tech Mono',monospace;color:var(--red)">${sellShares.toFixed(3)} adet / $${fmt2(sellShares*(prices[s.ticker]||0))}</span></div>`;remaining-=sellShares*(prices[s.ticker]||0);}
+  for(const s of sellers){if(remaining<=0)break;const excess=posVal(s)-tv*s.target/100;if(excess<=0)continue;const sellAmt=Math.min(excess,remaining);const sellShares=sellAmt/(prices[s.ticker]||1);if(sellShares<=0.001)continue;html+=<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="color:var(--red)">↓ ${s.ticker} sat</span><span style="font-family:'Share Tech Mono',monospace;color:var(--red)">${sellShares.toFixed(3)} adet / $${fmt2(sellAmt)}</span></div>;remaining-=sellAmt;}
+  if(remaining>0.01)html+=<div style="font-size:11px;color:var(--muted);margin-top:4px">Ek nakit: $${fmt2(remaining)}</div>;
   return html+'</div>';
 }
 
@@ -377,111 +436,163 @@ function rebalanceBuySuggestion(sellTicker){
   const sellP=PORT.find(p=>p.ticker===sellTicker);if(!sellP)return'';
   const sellPr=prices[sellTicker]||0;if(!sellPr)return'';
   const lo=startLots[sellTicker]||0;
-  const tShares=tv*sellP.target/100/sellPr;
-  const sellAmount=Math.max(0,lo-tShares)*sellPr;if(sellAmount<=0)return'';
+  const sellAmount=Math.max(0,lo-tv*sellP.target/100/sellPr)*sellPr;if(sellAmount<=0)return'';
   const buyers=PORT.filter(p=>p.ticker!==sellTicker&&curPct(p)<p.target);
   buyers.sort((a,b)=>(b.target-curPct(b))-(a.target-curPct(a)));
   if(buyers.length===0)return'';
-  let html=`<div style="margin-top:8px;padding:10px 12px;background:rgba(0,255,136,.06);border:1px solid var(--green);border-radius:8px"><div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--green);margin-bottom:8px">⚖️ DENGE ÖNERİSİ — Satış Tutarıyla Al</div><div style="font-size:11px;color:var(--muted);margin-bottom:8px">Satış tutarı: $${fmt2(sellAmount)}</div>`;
+  let html=<div style="margin-top:8px;padding:10px 12px;background:rgba(0,255,136,.06);border:1px solid var(--green);border-radius:8px"><div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--green);margin-bottom:6px">⚖️ DENGE — Satış Tutarıyla Al</div><div style="font-size:11px;color:var(--muted);margin-bottom:8px">Satış: $${fmt2(sellAmount)}</div>;
   let remaining=sellAmount;
-  for(const b of buyers){if(remaining<=0)break;const pr=prices[b.ticker]||0;if(!pr)continue;const deficit=tv*b.target/100-posVal(b);if(deficit<=0)continue;const buyShares=Math.min(deficit,remaining)/pr;if(buyShares<=0.001)continue;html+=`<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="color:var(--green)">↑ ${b.ticker} al</span><span style="font-family:'Share Tech Mono',monospace;color:var(--green)">${buyShares.toFixed(3)} adet / $${fmt2(buyShares*pr)}</span></div>`;remaining-=buyShares*pr;}
-  if(remaining>0)html+=`<div style="font-size:11px;color:var(--muted);margin-top:4px">Kalan: $${fmt2(remaining)}</div>`;
+  for(const b of buyers){if(remaining<=0)break;const pr=prices[b.ticker]||0;if(!pr)continue;const deficit=tv*b.target/100-posVal(b);if(deficit<=0)continue;const buyShares=Math.min(deficit,remaining)/pr;if(buyShares<=0.001)continue;html+=<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="color:var(--green)">↑ ${b.ticker} al</span><span style="font-family:'Share Tech Mono',monospace;color:var(--green)">${buyShares.toFixed(3)} adet / $${fmt2(buyShares*pr)}</span></div>;remaining-=buyShares*pr;}
+  if(remaining>0.01)html+=<div style="font-size:11px;color:var(--muted);margin-top:4px">Kalan: $${fmt2(remaining)}</div>;
   return html+'</div>';
 }
-function triggerAlert(type,msg){
-  if(type!=='info'){
-    if(document.getElementById('vibrate-toggle').checked&&navigator.vibrate)navigator.vibrate(type==='buy'?[100,50,100]:[200,50,200,50,200]);
-    if(document.getElementById('sound-toggle').checked){try{const ctx=new(window.AudioContext||window.webkitAudioContext)(),o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=type==='buy'?880:440;o.type='sine';g.gain.setValueAtTime(0.3,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.5);o.start();o.stop(ctx.currentTime+0.5);}catch(e){}}
-  }
-  const b=document.getElementById('alert-banner');
-  document.getElementById('alert-text').textContent=(type==='buy'?'⬆ ':type==='sell'?'⬇ ':'ℹ ')+msg;
-  b.className=type||'info';b.style.display='flex';setTimeout(closeAlert,5000);
-}
+
+function triggerAlert(type,msg){if(type!=='info'){if(document.getElementById('vibrate-toggle').checked&&navigator.vibrate)navigator.vibrate(type==='buy'?[100,50,100]:[200,50,200,50,200]);if(document.getElementById('sound-toggle').checked){try{const ctx=new(window.AudioContext||window.webkitAudioContext)(),o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=type==='buy'?880:440;o.type='sine';g.gain.setValueAtTime(0.3,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.5);o.start();o.stop(ctx.currentTime+0.5);}catch(e){}}}const b=document.getElementById('alert-banner');document.getElementById('alert-text').textContent=(type==='buy'?'⬆ ':type==='sell'?'⬇ ':'ℹ ')+msg;b.className=type||'info';b.style.display='flex';setTimeout(closeAlert,5000);}
 function closeAlert(){document.getElementById('alert-banner').style.display='none';}
 
+// ── GRAFİKLER ─────────────────────────────────────────────────────────────────
+function setChartRange(r,btn){chartRange=r;document.querySelectorAll('.range-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');drawAllCharts();}
+
+function drawAllCharts(){
+  if(priceHistory.length<2)return;
+  const data=chartRange>0?priceHistory.slice(-chartRange):priceHistory;
+  const dpr=window.devicePixelRatio||1;
+
+  // 1. Toplam USD
+  drawLineChart('chart-total-usd',data,e=>[{v:e.totalUSD,c:'#00e5ff'}],160,'$',dpr);
+
+  // 2. Toplam TL
+  drawLineChart('chart-total-tl',data,e=>[{v:e.totalTL,c:'#a78bfa'}],140,'₺',dpr);
+
+  // 3. Her varlık ayrı
+  const c3=document.getElementById('chart-each');
+  const ctx3=c3.getContext('2d');
+  c3.width=(c3.offsetWidth||300)*dpr;c3.height=160*dpr;ctx3.scale(dpr,dpr);
+  const W3=c3.offsetWidth||300,H3=160;ctx3.clearRect(0,0,W3,H3);
+  const allVals=[];PORT.forEach(p=>data.forEach(e=>e.prices[p.ticker]>0&&allVals.push(e.prices[p.ticker])));
+  if(allVals.length<2){ctx3.fillStyle='rgba(90,106,122,.5)';ctx3.font='12px Rajdhani';ctx3.textAlign='center';ctx3.fillText('Yeterli veri yok',W3/2,H3/2);return;}
+  const minV=Math.min(...allVals)*0.99,maxV=Math.max(...allVals)*1.01,range=maxV-minV||1;
+  function toY3(v){return H3-15-(v-minV)/range*(H3-30);}
+  function toX3(i){return 40+(i/(data.length-1||1))*(W3-50);}
+  drawGrid(ctx3,W3,H3);
+  drawYLabels(ctx3,minV,maxV,H3,'$');
+  PORT.forEach((p,pi)=>{
+    ctx3.strokeStyle=COLORS[pi];ctx3.lineWidth=1.5;ctx3.beginPath();let s=false;
+    data.forEach((e,i)=>{const v=e.prices[p.ticker];if(v>0){if(!s){ctx3.moveTo(toX3(i),toY3(v));s=true;}else ctx3.lineTo(toX3(i),toY3(v));}});ctx3.stroke();
+  });
+  drawXLabels(ctx3,data,toX3,H3);
+  // Legend
+  const leg=document.getElementById('chart-legend');
+  leg.innerHTML=PORT.map((p,pi)=><div class="legend-item"><span class="legend-dot" style="background:${COLORS[pi]}"></span>${p.ticker}</div>).join('');
+
+  // 4. % büyüme
+  const c4=document.getElementById('chart-pct');
+  const ctx4=c4.getContext('2d');
+  c4.width=(c4.offsetWidth||300)*dpr;c4.height=140*dpr;ctx4.scale(dpr,dpr);
+  const W4=c4.offsetWidth||300,H4=140;ctx4.clearRect(0,0,W4,H4);
+  drawGrid(ctx4,W4,H4);
+  const pctLines=PORT.map((p,pi)=>{
+    const firstVal=data.find(e=>e.prices[p.ticker]>0)?.prices[p.ticker]||0;
+    return{ticker:p.ticker,color:COLORS[pi],vals:data.map(e=>firstVal>0?(e.prices[p.ticker]-firstVal)/firstVal*100:0)};
+  });
+  // Toplam % de ekle
+  const firstTotal=data[0]?.totalUSD||0;
+  pctLines.push({ticker:'Toplam',color:'#fff',vals:data.map(e=>firstTotal>0?(e.totalUSD-firstTotal)/firstTotal*100:0)});
+  const allPcts=pctLines.flatMap(l=>l.vals);
+  const minP=Math.min(...allPcts)-1,maxP=Math.max(...allPcts)+1,rP=maxP-minP||1;
+  function toYp(v){return H4-15-(v-minP)/rP*(H4-30);}
+  function toXp(i){return 40+(i/(data.length-1||1))*(W4-50);}
+  ctx4.strokeStyle='rgba(255,255,255,.15)';ctx4.lineWidth=1;ctx4.setLineDash([4,4]);
+  ctx4.beginPath();ctx4.moveTo(40,toYp(0));ctx4.lineTo(W4-10,toYp(0));ctx4.stroke();ctx4.setLineDash([]);
+  drawYLabels(ctx4,minP,maxP,H4,'%');
+  pctLines.forEach(l=>{ctx4.strokeStyle=l.color;ctx4.lineWidth=l.ticker==='Toplam'?2:1.5;ctx4.beginPath();l.vals.forEach((v,i)=>i===0?ctx4.moveTo(toXp(i),toYp(v)):ctx4.lineTo(toXp(i),toYp(v)));ctx4.stroke();});
+  drawXLabels(ctx4,data,toXp,H4);
+  document.getElementById('chart-pct-legend').innerHTML=[...PORT.map((p,pi)=><div class="legend-item"><span class="legend-dot" style="background:${COLORS[pi]}"></span>${p.ticker}</div>),<div class="legend-item"><span class="legend-dot" style="background:#fff"></span>Toplam</div>].join('');
+
+  // 5. Günlük değişim bar
+  const c5=document.getElementById('chart-daily');
+  const ctx5=c5.getContext('2d');
+  c5.width=(c5.offsetWidth||300)*dpr;c5.height=120*dpr;ctx5.scale(dpr,dpr);
+  const W5=c5.offsetWidth||300,H5=120;ctx5.clearRect(0,0,W5,H5);
+  const dailyPcts=data.map((e,i)=>i===0?0:(e.totalUSD-data[i-1].totalUSD)/(data[i-1].totalUSD||1)*100);
+  const maxD=Math.max(Math.abs(Math.min(...dailyPcts)),Math.abs(Math.max(...dailyPcts)))||1;
+  function toYd(v){return H5/2-v/maxD*(H5/2-10);}
+  function toXd(i){return 40+(i/(data.length-1||1))*(W5-50);}
+  drawGrid(ctx5,W5,H5);
+  ctx5.strokeStyle='rgba(255,255,255,.15)';ctx5.lineWidth=1;ctx5.setLineDash([4,4]);
+  ctx5.beginPath();ctx5.moveTo(40,H5/2);ctx5.lineTo(W5-10,H5/2);ctx5.stroke();ctx5.setLineDash([]);
+  const barW=Math.max(2,Math.floor((W5-50)/data.length-2));
+  dailyPcts.forEach((v,i)=>{if(i===0)return;const x=toXd(i)-barW/2,y0=H5/2,h=Math.abs(toYd(v)-H5/2);ctx5.fillStyle=v>=0?'rgba(0,255,136,.7)':'rgba(255,56,96,.7)';ctx5.fillRect(x,v>=0?y0-h:y0,barW,h);});
+  ctx5.fillStyle='rgba(90,106,122,.7)';ctx5.font='9px Share Tech Mono';ctx5.textAlign='right';
+  ctx5.fillText('+'+maxD.toFixed(1)+'%',36,12);ctx5.fillText('-'+maxD.toFixed(1)+'%',36,H5-2);
+  drawXLabels(ctx5,data,toXd,H5);
+}
+
+function drawLineChart(id,data,linesFn,h,prefix,dpr){
+  const c=document.getElementById(id);const ctx=c.getContext('2d');
+  c.width=(c.offsetWidth||300)*dpr;c.height=h*dpr;ctx.scale(dpr,dpr);
+  const W=c.offsetWidth||300,H=h;ctx.clearRect(0,0,W,H);
+  const lines=linesFn(data[0]);
+  const allVals=data.flatMap(e=>linesFn(e).map(l=>l.v)).filter(v=>v>0);
+  if(allVals.length<2)return;
+  const minV=Math.min(...allVals)*0.995,maxV=Math.max(...allVals)*1.005,range=maxV-minV||1;
+  function toY(v){return H-15-(v-minV)/range*(H-30);}
+  function toX(i){return 40+(i/(data.length-1||1))*(W-50);}
+  drawGrid(ctx,W,H);drawYLabels(ctx,minV,maxV,H,prefix);
+  const firstLine=linesFn(data[0]);
+  firstLine.forEach((_,li)=>{
+    const vals=data.map(e=>linesFn(e)[li]);
+    const col=vals[0].c;
+    ctx.beginPath();ctx.moveTo(toX(0),H-15);
+    vals.forEach((l,i)=>{if(l.v>0)ctx.lineTo(toX(i),toY(l.v));});
+    ctx.lineTo(toX(data.length-1),H-15);ctx.closePath();
+    const grad=ctx.createLinearGradient(0,0,0,H);grad.addColorStop(0,col+'40');grad.addColorStop(1,col+'00');
+    ctx.fillStyle=grad;ctx.fill();
+    ctx.strokeStyle=col;ctx.lineWidth=2;ctx.beginPath();
+    vals.forEach((l,i)=>i===0?ctx.moveTo(toX(i),toY(l.v)):l.v>0&&ctx.lineTo(toX(i),toY(l.v)));ctx.stroke();
+  });
+  drawXLabels(ctx,data,toX,H);
+}
+
+function drawGrid(ctx,W,H){ctx.strokeStyle='rgba(255,255,255,.05)';ctx.lineWidth=1;for(let g=0;g<5;g++){const y=15+g*(H-30)/4;ctx.beginPath();ctx.moveTo(40,y);ctx.lineTo(W-10,y);ctx.stroke();}}
+function drawYLabels(ctx,minV,maxV,H,prefix){ctx.fillStyle='rgba(90,106,122,.7)';ctx.font='9px Share Tech Mono';ctx.textAlign='right';for(let g=0;g<5;g++){const v=minV+g*(maxV-minV)/4;const label=Math.abs(v)>=1000?(v/1000).toFixed(1)+'K':v.toFixed(1);ctx.fillText(prefix+label,36,H-15-g*(H-30)/4+4);}}
+function drawXLabels(ctx,data,toX,H){ctx.fillStyle='rgba(90,106,122,.7)';ctx.font='9px Share Tech Mono';ctx.textAlign='center';const step=Math.max(1,Math.floor(data.length/5));for(let i=0;i<data.length;i+=step){const d=new Date(data[i].date);ctx.fillText(d.getDate()+'/'+(d.getMonth()+1),toX(i),H-2);}}
+
+// ── FETCH ─────────────────────────────────────────────────────────────────────
 async function fetchAllPrices(){
   document.getElementById('refresh-icon').innerHTML='<span class="spinner"></span>';
   let fetched=0;
   for(const p of PORT){
-    try{
-      const sym=encodeURIComponent(p.ticker);
-      // Önce allorigins proxy dene, sonra direkt Yahoo
-      let res;
-      try{
-        const proxyUrl=`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=2d`)}`;
-        res=await fetch(proxyUrl);
-      }catch(e){
-        res=await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=2d`);
-      }
-      if(!res.ok)throw new Error();
-      const data=await res.json();
-      const meta=data?.chart?.result?.[0]?.meta;
-      if(!meta)throw new Error();
-      // Premarket > regularMarket > previousClose sırasıyla dene
-      const premarket = meta.preMarketPrice||0;
-      const regular   = meta.regularMarketPrice||0;
-      const cur = premarket > 0 ? premarket : regular > 0 ? regular : 0;
-      const marketState = meta.marketState||'CLOSED';
-      if(cur>0){
-        prevClose[p.ticker]=meta.previousClose||meta.chartPreviousClose||cur;
-        prices[p.ticker]=cur;
-        const inp=document.getElementById('price-'+p.ticker);
-        if(inp&&!inp.matches(':focus'))inp.value=cur.toFixed(2);
-        // Market durumunu göster
-        const pEl=document.getElementById('pchange-'+p.ticker);
-        if(pEl){
-          const ch=(cur-(meta.previousClose||cur))/(meta.previousClose||cur)*100;
-          const stateLabel=marketState==='PRE'?'⏰ Pre':marketState==='POST'?'🌙 Post':marketState==='REGULAR'?'🟢 Açık':'🔴 Kapalı';
-          pEl.textContent=`${stateLabel} ${ch>=0?'+':''}${ch.toFixed(2)}%`;
-          pEl.style.color=ch>0?'var(--green)':ch<0?'var(--red)':'var(--muted)';
-        }
-        fetched++;
-      }
-    }catch(e){}
+    let cur=0,prevC=0,marketState='CLOSED';
+    try{const url=https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(p.ticker)}?interval=1d&range=2d;const res=await fetch(https://api.allorigins.win/raw?url=${encodeURIComponent(url)});if(res.ok){const d=await res.json();const m=d?.chart?.result?.[0]?.meta;if(m){cur=m.preMarketPrice||m.regularMarketPrice||0;prevC=m.previousClose||m.chartPreviousClose||0;marketState=m.marketState||'CLOSED';}}}catch(e){}
+    if(!cur){try{const url=https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(p.ticker)}?interval=1d&range=2d;const res=await fetch(https://corsproxy.io/?${encodeURIComponent(url)});if(res.ok){const d=await res.json();const m=d?.chart?.result?.[0]?.meta;if(m){cur=m.preMarketPrice||m.regularMarketPrice||0;prevC=m.previousClose||m.chartPreviousClose||0;marketState=m.marketState||'CLOSED';}}}catch(e){}}
+    if(!cur){try{const res=await fetch(https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(p.ticker)}?interval=1d&range=2d);if(res.ok){const d=await res.json();const m=d?.chart?.result?.[0]?.meta;if(m){cur=m.preMarketPrice||m.regularMarketPrice||0;prevC=m.previousClose||m.chartPreviousClose||0;marketState=m.marketState||'CLOSED';}}}catch(e){}}
+    if(cur>0){
+      prevClose[p.ticker]=prevC||prices[p.ticker]||cur;prices[p.ticker]=cur;
+      const inp=document.getElementById('price-'+p.ticker);if(inp&&!inp.matches(':focus'))inp.value=cur.toFixed(2);
+      const pEl=document.getElementById('pchange-'+p.ticker);
+      if(pEl&&prevC>0){const ch=(cur-prevC)/prevC*100;const st=marketState==='PRE'?'⏰':marketState==='POST'?'🌙':marketState==='REGULAR'?'🟢':'🔴';pEl.textContent=${st} ${ch>=0?'+':''}${ch.toFixed(2)}%;pEl.style.color=ch>0?'var(--green)':ch<0?'var(--red)':'var(--muted)';}
+      fetched++;
+    }
   }
   const now=new Date();
-  document.getElementById('last-update').textContent=`Son: ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+  document.getElementById('last-update').textContent=Son: ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')};
   document.getElementById('refresh-icon').textContent='⟳';
   saveState();refreshDisplays();
   PORT.forEach(p=>checkSignal(p.ticker));
-  if(fetched===0)triggerAlert('sell','Fiyat alınamadı — piyasa kapalı olabilir');
+  if(fetched===0)triggerAlert('sell','Fiyat alınamadı — manuel giriş yapabilirsiniz');
 }
 
-function startAutoRefresh(){if(arTimer)clearInterval(arTimer);if(document.getElementById('auto-refresh').checked)arTimer=setInterval(fetchAllPrices,60000);}
+function startAutoRefresh(){if(arTimer)clearInterval(arTimer);if(document.getElementById('auto-refresh').checked)arTimer=setInterval(()=>{fetchAllPrices();fetchKur();},60000);}
 function toggleAutoRefresh(){startAutoRefresh();}
 
-function saveState(){
-  try{
-    const d=JSON.stringify({prices,prevClose,startPrices,startLots});
-    try{localStorage.setItem('shannon_etf_v2',d);}catch(e){}
-    try{sessionStorage.setItem('shannon_etf_v2',d);}catch(e){}
-    try{const enc=btoa(unescape(encodeURIComponent(d)));document.cookie='shannon_etf_v2='+enc+';path=/;max-age=31536000;SameSite=Strict';}catch(e){}
-  }catch(e){}
-}
-function loadState(){
-  try{
-    let raw=null;
-    try{raw=localStorage.getItem('shannon_etf_v2');}catch(e){}
-    if(!raw){try{raw=sessionStorage.getItem('shannon_etf_v2');}catch(e){}}
-    if(!raw){try{const m=document.cookie.match(/shannon_etf_v2=([^;]+)/);if(m)raw=decodeURIComponent(escape(atob(m[1])));}catch(e){}}
-    if(!raw)return;
-    const s=JSON.parse(raw);
-    prices=s.prices||{};prevClose=s.prevClose||{};startPrices=s.startPrices||{};startLots=s.startLots||{};
-    // Yüklenen fiyatları input'lara yaz
-    PORT.forEach(p=>{
-      const inp=document.getElementById('price-'+p.ticker);
-      if(inp&&prices[p.ticker])inp.value=prices[p.ticker].toFixed(2);
-      const si=document.getElementById('sp-'+p.ticker);
-      if(si&&startPrices[p.ticker])si.value=startPrices[p.ticker];
-      const li=document.getElementById('sl-'+p.ticker);
-      if(li&&startLots[p.ticker])li.value=startLots[p.ticker];
-    });
-  }catch(e){}
-}
+function saveState(){try{const d=JSON.stringify({prices,prevClose,startPrices,startLots,priceHistory,kur:kurVal});try{localStorage.setItem('shannon_etf_v2',d);}catch(e){}try{sessionStorage.setItem('shannon_etf_v2',d);}catch(e){}try{const enc=btoa(unescape(encodeURIComponent(d)));document.cookie='shannon_etf_v2='+enc+';path=/;max-age=31536000;SameSite=Strict';}catch(e){}}catch(e){}}
+function loadState(){try{let raw=null;try{raw=localStorage.getItem('shannon_etf_v2');}catch(e){}if(!raw){try{raw=sessionStorage.getItem('shannon_etf_v2');}catch(e){}}if(!raw){try{const m=document.cookie.match(/shannon_etf_v2=([^;]+)/);if(m)raw=decodeURIComponent(escape(atob(m[1])));}catch(e){}}if(!raw)return;const s=JSON.parse(raw);prices=s.prices||{};prevClose=s.prevClose||{};startPrices=s.startPrices||{};startLots=s.startLots||{};priceHistory=s.priceHistory||[];if(s.kur)kurVal=s.kur;}catch(e){}}
 
-function saveAndCopy(){const code=btoa(unescape(encodeURIComponent(JSON.stringify({prices,prevClose,startPrices,startLots}))));document.getElementById('save-code').value=code;document.getElementById('save-code-wrap').style.display='block';navigator.clipboard?.writeText(code).then(()=>triggerAlert('buy','Kod kopyalandı!')).catch(()=>{document.getElementById('save-code').select();});}
+function saveAndCopy(){const code=btoa(unescape(encodeURIComponent(JSON.stringify({prices,prevClose,startPrices,startLots,priceHistory}))));document.getElementById('save-code').value=code;document.getElementById('save-code-wrap').style.display='block';navigator.clipboard?.writeText(code).then(()=>triggerAlert('buy','Kod kopyalandı!')).catch(()=>{document.getElementById('save-code').select();});}
 function showLoadInput(){const w=document.getElementById('load-wrap');w.style.display=w.style.display==='none'?'block':'none';}
-function loadFromCode(){try{const s=JSON.parse(decodeURIComponent(escape(atob(document.getElementById('load-code').value.trim()))));if(s.prices)prices=s.prices;if(s.prevClose)prevClose=s.prevClose;if(s.startPrices)startPrices=s.startPrices;if(s.startLots)startLots=s.startLots;PORT.forEach(p=>{const pi=document.getElementById('price-'+p.ticker),si=document.getElementById('sp-'+p.ticker),li=document.getElementById('sl-'+p.ticker);if(pi&&prices[p.ticker])pi.value=prices[p.ticker];if(si&&startPrices[p.ticker])si.value=startPrices[p.ticker];if(li&&startLots[p.ticker])li.value=startLots[p.ticker];});saveState();refreshDisplays();document.getElementById('load-wrap').style.display='none';triggerAlert('buy','Veriler yüklendi!');}catch(e){triggerAlert('sell','Geçersiz kod');}}
+function loadFromCode(){try{const s=JSON.parse(decodeURIComponent(escape(atob(document.getElementById('load-code').value.trim()))));if(s.prices)prices=s.prices;if(s.prevClose)prevClose=s.prevClose;if(s.startPrices)startPrices=s.startPrices;if(s.startLots)startLots=s.startLots;if(s.priceHistory)priceHistory=s.priceHistory;fillInputs();saveState();refreshDisplays();document.getElementById('load-wrap').style.display='none';triggerAlert('buy','Veriler yüklendi!');}catch(e){triggerAlert('sell','Geçersiz kod');}}
 </script>
+
 </body>
 </html>
