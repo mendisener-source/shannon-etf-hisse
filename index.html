@@ -2,288 +2,138 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#0a0c0f">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Shannon Wealth">
-<title>Shannon Wealth Machine</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shannon Wealth Terminal</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0a0c0f;--surface:#111417;--card:#161a1f;--border:#1e2530;
-  --accent:#00e5ff;--green:#00ff88;--red:#ff3860;--yellow:#ffd600;
-  --text:#e0e8f0;--muted:#5a6a7a;--bull:#ff6d00;--bear:#00b4d8}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;overflow-x:hidden}
-body{padding-bottom:80px}
-header{position:sticky;top:0;z-index:100;background:#0d1117;border-bottom:1px solid var(--accent);
-  padding:10px 16px;display:flex;align-items:center;justify-content:space-between;
-  box-shadow:0 2px 20px rgba(0,229,255,.15)}
-.h-title{font-size:18px;font-weight:700;letter-spacing:2px;
-  background:linear-gradient(90deg,var(--accent),var(--green));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.h-sub{font-size:11px;color:var(--muted);font-family:'Share Tech Mono',monospace}
-.h-total{font-size:22px;font-weight:700;font-family:'Share Tech Mono',monospace;color:var(--accent)}
-.tab-bar{display:flex;background:var(--surface);border-bottom:1px solid var(--border);
-  position:sticky;top:62px;z-index:99;overflow-x:auto}
-.tab{flex:1;min-width:70px;padding:12px 4px;text-align:center;font-size:10px;font-weight:600;
-  letter-spacing:1px;color:var(--muted);border-bottom:2px solid transparent;
-  cursor:pointer;transition:all .2s;text-transform:uppercase;white-space:nowrap}
-.tab.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(0,229,255,.05)}
-.section{display:none;padding:12px}.section.active{display:block}
-.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;position:relative}
-.badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;text-transform:uppercase}
-.badge.hold{background:rgba(90,106,122,.2);color:var(--muted)}
-.badge.buy{background:rgba(0,255,136,.15);color:var(--green);border:1px solid var(--green)}
-.badge.sell{background:rgba(255,56,96,.15);color:var(--red);border:1px solid var(--red)}
-.inp{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;
-  color:var(--text);font-family:'Share Tech Mono',monospace;font-size:22px;padding:10px 12px;outline:none}
-.inp-label{font-size:10px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px}
-.band-bar{position:relative;height:8px;background:var(--bg);border-radius:4px;border:1px solid var(--border);margin:12px 0}
-.band-fill{height:100%;border-radius:4px;transition:width .3s}
-.bm{position:absolute;top:-4px;width:3px;height:16px;border-radius:2px;transform:translateX(-50%)}
-.signal-box{border-radius:8px;padding:10px 12px;margin-top:8px;border:1px solid}
-.signal-box.buy{background:rgba(0,255,136,.08);border-color:var(--green)}
-.signal-box.sell{background:rgba(255,56,96,.08);border-color:var(--red)}
-.tbl{width:100%;border-collapse:collapse}
-.tbl th{font-size:9px;color:var(--muted);padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)}
-.tbl td{padding:8px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.04)}
-.btn{width:100%;padding:14px;border-radius:10px;border:1px solid var(--accent);
-  background:rgba(0,229,255,.08);color:var(--accent);font-weight:700;cursor:pointer;margin-bottom:8px}
-#alert-banner{position:fixed;top:0;left:0;right:0;z-index:999;padding:14px 16px;display:none;font-weight:700}
-#alert-banner.buy{background:var(--green);color:#000}
-#alert-banner.sell{background:var(--red);color:#fff}
-canvas{width:100%;border-radius:8px;background:var(--bg)}
-.legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);margin-top:4px}
-.legend-dot{width:8px;height:8px;border-radius:50%}
+:root{--bg:#0a0c0f;--surface:#111417;--card:#161a1f;--border:#1e2530;--accent:#00e5ff;--green:#00ff88;--red:#ff3860;--text:#e0e8f0;--muted:#5a6a7a}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;padding:15px}
+header{display:flex;justify-content:space-between;align-items:center;padding-bottom:15px;border-bottom:1px solid var(--accent);margin-bottom:20px}
+.h-title{font-size:20px;font-weight:700;color:var(--accent);letter-spacing:1px}
+.h-total{font-size:24px;font-family:'Share Tech Mono',monospace;color:var(--green)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:15px;margin-bottom:12px}
+.ticker-row{display:flex;justify-content:space-between;margin-bottom:8px;font-weight:600}
+.inp{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:20px;padding:8px;outline:none;margin:8px 0}
+.band-bar{height:10px;background:var(--bg);border-radius:5px;border:1px solid var(--border);position:relative;margin-top:10px}
+.band-fill{height:100%;border-radius:5px;transition:width 0.4s}
+.btn{width:100%;padding:15px;border-radius:10px;border:1px solid var(--accent);background:rgba(0,229,255,0.08);color:var(--accent);font-weight:700;cursor:pointer;margin-top:10px}
+canvas{width:100%;background:var(--bg);border-radius:8px;margin-top:10px}
+.signal-box{margin-top:8px;font-weight:700;padding:8px;border-radius:6px;text-align:center;font-size:14px}
+.buy{background:rgba(0,255,136,0.1);color:var(--green);border:1px solid var(--green)}
+.sell{background:rgba(255,56,96,0.1);color:var(--red);border:1px solid var(--red)}
 </style>
 </head>
 <body>
-<div id="alert-banner"><span id="alert-text"></span></div>
 
 <header>
-  <div>
-    <div class="h-title">SHANNON WEALTH</div>
-    <div class="h-sub" id="last-update">Son güncelleme: —</div>
-  </div>
-  <div><div class="h-total" id="header-total">—</div></div>
+  <div class="h-title">SHANNON TERMINAL</div>
+  <div class="h-total" id="header-total">$0</div>
 </header>
 
-<div class="tab-bar">
-  <div class="tab active" data-tab="signals" onclick="showTab(this)">📡 Sinyaller</div>
-  <div class="tab" data-tab="portfolio" onclick="showTab(this)">📊 Portföy</div>
-  <div class="tab" data-tab="chart" onclick="showTab(this)">📈 Grafikler</div>
-  <div class="tab" data-tab="settings" onclick="showTab(this)">⚙️ Ayarlar</div>
+<div id="assets-container"></div>
+
+<div class="card">
+  <div style="font-size:12px;color:var(--muted);margin-bottom:8px">BİRİKMİŞ TOPLAM LOT (Snowball)</div>
+  <canvas id="lot-chart" height="150"></canvas>
+  <div id="lot-count" style="font-size:14px;text-align:center;margin-top:10px;color:white"></div>
 </div>
 
-<div id="tab-signals" class="section active"></div>
-
-<div id="tab-portfolio" class="section">
-  <div class="card"><table class="tbl"><thead><tr><th>Hisse</th><th>Hedef %</th><th>Mevcut %</th><th>Sapma</th></tr></thead><tbody id="alloc-tbody"></tbody></table></div>
-</div>
-
-<div id="tab-chart" class="section">
-  <div class="card">
-    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">TOPLAM PORTFÖY DEĞERİ ($)</div>
-    <canvas id="chart-total-usd" height="160"></canvas>
-  </div>
-  <div class="card">
-    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">BİRİKMİŞ TOPLAM LOT SAYISI (Snowball)</div>
-    <canvas id="chart-lot-accumulation" height="160"></canvas>
-    <div class="legend" id="lot-accum-legend"></div>
-  </div>
-</div>
-
-<div id="tab-settings" class="section">
-  <div class="card">
-    <label class="inp-label">Telegram Bot Token</label>
-    <input class="inp" type="password" id="tg-token" placeholder="BotFather'dan aldığın kod" onblur="saveState()">
-    <br><br>
-    <label class="inp-label">Telegram Chat ID</label>
-    <input class="inp" type="text" id="tg-id" placeholder="UserinfoBot'tan aldığın ID" onblur="saveState()">
-  </div>
-  <button class="btn" onclick="fetchAllPrices()">VERİLERİ TAZELE</button>
-  <button class="btn" style="border-color:var(--green);color:var(--green)" onclick="saveState()">AYARLARI KAYDET</button>
-</div>
+<button class="btn" onclick="fetchAllPrices()">FİYATLARI GÜNCELLE</button>
 
 <script>
-// --- KONFİGÜRASYON ---
 const PORT = [
-  {ticker:'AMDG', name:'AMD Growth',    target:20, buyLim:18, sellLim:22},
-  {ticker:'SPXL', name:'S&P 500 3x',    target:20, buyLim:18, sellLim:22},
-  {ticker:'NVDU', name:'NVIDIA 2x',     target:20, buyLim:18, sellLim:22},
-  {ticker:'TSLL', name:'Tesla 2x Bull', target:20, buyLim:18, sellLim:22},
-  {ticker:'TMF',  name:'Treasury 3x',   target:20, buyLim:18, sellLim:22}
+  {ticker:'AMDG', target:20, buyLim:18, sellLim:22, color:'#00e5ff'},
+  {ticker:'SPXL', target:20, buyLim:18, sellLim:22, color:'#ff6d00'},
+  {ticker:'NVDU', target:20, buyLim:18, sellLim:22, color:'#00ff88'},
+  {ticker:'TSLL', target:20, buyLim:18, sellLim:22, color:'#ffd700'},
+  {ticker:'TMF',  target:20, buyLim:18, sellLim:22, color:'#a78bfa'}
 ];
-const COLORS = ['#00e5ff','#ff6d00','#00ff88','#ffd700','#a78bfa'];
 
-let prices = {}, startLots = {}, priceHistory = [];
+// BAŞLANGIÇ LOTLARIN (Senin ekran görüntülerindeki veriler)
+let myLots = { 'AMDG': 758, 'SPXL': 85, 'NVDU': 430, 'TSLL': 310, 'TMF': 150 };
+let prices = {};
+let lotHistory = [];
 
-window.onload = () => {
-  loadState();
-  buildSignalCards();
-  refreshDisplays();
-  fetchAllPrices();
-};
-
-function showTab(el) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('tab-' + el.dataset.tab).classList.add('active');
-  if(el.dataset.tab === 'chart') setTimeout(drawAllCharts, 100);
-}
-
-function buildSignalCards() {
-  const c = document.getElementById('tab-signals'); c.innerHTML = '';
-  PORT.forEach((p, pi) => {
-    const div = document.createElement('div'); div.className = 'card';
+function init() {
+  const container = document.getElementById('assets-container');
+  PORT.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'card';
     div.innerHTML = `
-      <div style="display:flex;justify-content:space-between">
-        <div><b style="color:${COLORS[pi]}">${p.ticker}</b></div>
-        <span class="badge hold" id="badge-${p.ticker}">Bekliyor</span>
-      </div>
-      <div style="margin:10px 0"><input class="inp" type="number" id="price-${p.ticker}" onblur="prices['${p.ticker}']=parseFloat(this.value);refreshDisplays()"></div>
-      <div class="band-bar"><div class="band-fill" id="fill-${p.ticker}" style="background:${COLORS[pi]}"></div></div>
+      <div class="ticker-row"><span>${p.ticker}</span><span id="weight-${p.ticker}">%0</span></div>
+      <input type="number" class="inp" id="price-${p.ticker}" value="0" onchange="updateUI()">
+      <div class="band-bar"><div class="band-fill" id="fill-${p.ticker}" style="background:${p.color}"></div></div>
       <div id="sig-${p.ticker}"></div>
     `;
-    c.appendChild(div);
+    container.appendChild(div);
   });
+  fetchAllPrices();
 }
 
 async function fetchAllPrices() {
   for(const p of PORT) {
     try {
-      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${p.ticker}?interval=1d&range=1d`;
-      const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
+      const url = `https://api.allorigins.win/raw?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/'+p.ticker)}`;
+      const res = await fetch(url);
       const d = await res.json();
       const pr = d.chart.result[0].meta.regularMarketPrice;
       if(pr) {
         prices[p.ticker] = pr;
         document.getElementById(`price-${p.ticker}`).value = pr.toFixed(2);
       }
-    } catch(e) { console.log(p.ticker + " çekilemedi."); }
+    } catch(e) { console.log("Hata:", p.ticker); }
   }
-  refreshDisplays();
+  updateUI();
 }
 
-function totalVal() { return PORT.reduce((s, p) => s + (prices[p.ticker] || 0) * (startLots[p.ticker] || 0), 0); }
-
-function refreshDisplays() {
-  const tv = totalVal();
-  document.getElementById('header-total').textContent = tv > 0 ? '$' + tv.toLocaleString() : '—';
-  
+function updateUI() {
+  let total = 0;
   PORT.forEach(p => {
-    const cp = tv > 0 ? ((prices[p.ticker] * startLots[p.ticker]) / tv) * 100 : p.target;
-    const fill = document.getElementById(`fill-${p.ticker}`);
-    if(fill) fill.style.width = cp + '%';
+    prices[p.ticker] = parseFloat(document.getElementById(`price-${p.ticker}`).value) || 0;
+    total += prices[p.ticker] * myLots[p.ticker];
+  });
+  
+  document.getElementById('header-total').textContent = '$' + total.toLocaleString(undefined, {maximumFractionDigits:0});
+
+  let currentTotalLots = 0;
+  PORT.forEach(p => {
+    let weight = total > 0 ? ((prices[p.ticker] * myLots[p.ticker]) / total) * 100 : 0;
+    document.getElementById(`weight-${p.ticker}`).textContent = '%' + weight.toFixed(1);
+    document.getElementById(`fill-${p.ticker}`).style.width = weight + '%';
     
-    const sigBox = document.getElementById(`sig-${p.ticker}`);
-    if(cp >= p.sellLim) {
-        sigBox.innerHTML = `<div class="signal-box sell">🚨 SATIŞ ZAMANI (%${cp.toFixed(1)})</div>`;
-        sendTelegramOnce(`${p.ticker} SATIŞ SİNYALİ! Ağırlık: %${cp.toFixed(1)}`);
-    } else if(cp <= p.buyLim) {
-        sigBox.innerHTML = `<div class="signal-box buy">✅ ALIM ZAMANI (%${cp.toFixed(1)})</div>`;
-        sendTelegramOnce(`${p.ticker} ALIM SİNYALİ! Ağırlık: %${cp.toFixed(1)}`);
-    } else { sigBox.innerHTML = ''; }
+    const sig = document.getElementById(`sig-${p.ticker}`);
+    if(weight >= p.sellLim) sig.innerHTML = `<div class="signal-box sell">SATIŞ ZAMANI</div>`;
+    else if(weight <= p.buyLim) sig.innerHTML = `<div class="signal-box buy">ALIM ZAMANI</div>`;
+    else sig.innerHTML = '';
+    
+    currentTotalLots += myLots[p.ticker];
   });
 
-  // Tarihçe kaydı
-  if(tv > 0) {
-    priceHistory.push({date: new Date(), totalUSD: tv, lots: {...startLots}});
-    if(priceHistory.length > 100) priceHistory.shift();
-  }
+  lotHistory.push(currentTotalLots);
+  if(lotHistory.length > 50) lotHistory.shift();
+  drawChart();
+  document.getElementById('lot-count').textContent = `Toplam Lot: ${currentTotalLots}`;
 }
 
-// --- TELEGRAM FONKSİYONU ---
-let lastSent = "";
-async function sendTelegramOnce(msg) {
-  const token = document.getElementById('tg-token').value;
-  const id = document.getElementById('tg-id').value;
-  if(!token || !id || lastSent === msg) return;
-  
-  const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${id}&text=${encodeURIComponent(msg)}`;
-  try { await fetch(url); lastSent = msg; } catch(e) {}
-}
-
-// --- GRAFİK MOTORU ---
-function drawAllCharts() {
-  const dpr = window.devicePixelRatio || 1;
-  drawTotalChart(dpr);
-  drawLotAccumulationChart(dpr);
-}
-
-function drawTotalChart(dpr) {
-  const c = document.getElementById('chart-total-usd');
+function drawChart() {
+  const c = document.getElementById('lot-chart');
   const ctx = c.getContext('2d');
-  c.width = c.offsetWidth * dpr; c.height = 160 * dpr; ctx.scale(dpr, dpr);
-  const W = c.offsetWidth, H = 160;
+  const W = c.width, H = c.height;
+  ctx.clearRect(0,0,W,H);
+  if(lotHistory.length < 2) return;
   
-  const vals = priceHistory.map(h => h.totalUSD);
-  if(vals.length < 2) return;
-  const min = Math.min(...vals) * 0.95, max = Math.max(...vals) * 1.05;
-  
-  ctx.strokeStyle = '#00e5ff'; ctx.lineWidth = 2; ctx.beginPath();
-  vals.forEach((v, i) => {
-    const x = (i / (vals.length - 1)) * W;
+  const min = Math.min(...lotHistory) * 0.99, max = Math.max(...lotHistory) * 1.01;
+  ctx.strokeStyle = 'white'; ctx.lineWidth = 3; ctx.beginPath();
+  lotHistory.forEach((v, i) => {
+    const x = (i / (lotHistory.length - 1)) * W;
     const y = H - ((v - min) / (max - min)) * H;
     if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
   });
   ctx.stroke();
 }
 
-function drawLotAccumulationChart(dpr) {
-  const c = document.getElementById('chart-lot-accumulation');
-  const ctx = c.getContext('2d');
-  c.width = c.offsetWidth * dpr; c.height = 160 * dpr; ctx.scale(dpr, dpr);
-  const W = c.offsetWidth, H = 160;
-  
-  const totalLots = priceHistory.map(h => {
-    return Object.values(h.lots).reduce((a, b) => a + b, 0);
-  });
-
-  if(totalLots.length < 2) return;
-  const min = Math.min(...totalLots) * 0.99, max = Math.max(...totalLots) * 1.01;
-  
-  ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3; 
-  ctx.shadowBlur = 8; ctx.shadowColor = 'white';
-  ctx.beginPath();
-  totalLots.forEach((v, i) => {
-    const x = (i / (totalLots.length - 1)) * W;
-    const y = H - ((v - min) / (max - min)) * H;
-    if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-  });
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-
-  document.getElementById('lot-accum-legend').innerHTML = `
-    <div class="legend-item"><span class="legend-dot" style="background:#fff"></span> Toplam Birikmiş Lot: ${totalLots[totalLots.length-1].toFixed(2)}</div>
-  `;
-}
-
-function saveState() {
-  const s = {
-    tgToken: document.getElementById('tg-token').value,
-    tgId: document.getElementById('tg-id').value,
-    lots: startLots,
-    history: priceHistory
-  };
-  localStorage.setItem('shannon_v3', JSON.stringify(s));
-}
-
-function loadState() {
-  const raw = localStorage.getItem('shannon_v3');
-  if(!raw) {
-      // Varsayılan Test Verisi
-      PORT.forEach(p => startLots[p.ticker] = 100); 
-      return;
-  }
-  const s = JSON.parse(raw);
-  document.getElementById('tg-token').value = s.tgToken || "";
-  document.getElementById('tg-id').value = s.tgId || "";
-  startLots = s.lots || {};
-  priceHistory = s.history || [];
-}
+window.onload = init;
 </script>
 </body>
 </html>
