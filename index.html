@@ -2,179 +2,613 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shannon Wealth Terminal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0c0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Shannon ETF">
+<title>Shannon ETF</title>
+<link rel="manifest" id="manifest-link">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0a0c0f;--surface:#111417;--card:#161a1f;--border:#1e2530;--accent:#00e5ff;--green:#00ff88;--red:#ff3860;--text:#e0e8f0;--muted:#5a6a7a}
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;padding:15px;max-width:600px;margin:auto}
-header{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--accent);margin-bottom:20px}
-.h-title{font-size:18px;font-weight:700;color:var(--accent);letter-spacing:1px}
-.h-total{font-size:22px;font-family:'Share Tech Mono',monospace;color:var(--green)}
-.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:15px;margin-bottom:12px;box-shadow: 0 4px 15px rgba(0,0,0,0.3)}
-.ticker-row{display:flex;justify-content:space-between;margin-bottom:8px;font-weight:700;font-size:18px}
-.inp{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:20px;padding:10px;outline:none;margin:8px 0;text-align:center}
-.band-bar{height:12px;background:var(--bg);border-radius:6px;border:1px solid var(--border);position:relative;margin-top:10px;overflow:hidden}
-.band-fill{height:100%;transition:width 0.6s cubic-bezier(0.17, 0.67, 0.83, 0.67)}
-.btn{width:100%;padding:18px;border-radius:12px;border:2px solid var(--accent);background:rgba(0,229,255,0.1);color:var(--accent);font-weight:700;font-size:16px;cursor:pointer;margin-top:10px;transition: 0.3s}
-.btn:active{transform: scale(0.98); background:var(--accent); color:black}
-canvas{width:100%;height:150px;background:var(--bg);border-radius:8px;margin-top:10px}
-.signal-box{margin-top:10px;font-weight:700;padding:10px;border-radius:8px;text-align:center;font-size:15px;letter-spacing:1px}
-.buy{background:rgba(0,255,136,0.15);color:var(--green);border:1px solid var(--green)}
-.sell{background:rgba(255,56,96,0.15);color:var(--red);border:1px solid var(--red)}
-.lot-label{font-size:12px;color:var(--muted);text-align:center;margin-top:5px}
+:root{--bg:#0a0c0f;--surface:#111417;--card:#161a1f;--border:#1e2530;
+  --accent:#00e5ff;--green:#00ff88;--red:#ff3860;--yellow:#ffd600;
+  --text:#e0e8f0;--muted:#5a6a7a;--bull:#ff6d00;--bear:#00b4d8}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;overflow-x:hidden}
+body{padding-bottom:80px}
+header{position:sticky;top:0;z-index:100;background:#0d1117;border-bottom:1px solid var(--accent);
+  padding:10px 16px;display:flex;align-items:center;justify-content:space-between;
+  box-shadow:0 2px 20px rgba(0,229,255,.15)}
+.h-title{font-size:18px;font-weight:700;letter-spacing:2px;
+  background:linear-gradient(90deg,var(--accent),var(--green));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.h-sub{font-size:11px;color:var(--muted);font-family:'Share Tech Mono',monospace}
+.h-total{font-size:22px;font-weight:700;font-family:'Share Tech Mono',monospace;color:var(--accent)}
+.h-label{font-size:10px;color:var(--muted);text-align:right}
+.tab-bar{display:flex;background:var(--surface);border-bottom:1px solid var(--border);
+  position:sticky;top:62px;z-index:99;overflow-x:auto}
+.tab{flex:1;min-width:70px;padding:10px 4px;text-align:center;font-size:10px;font-weight:600;
+  letter-spacing:1px;color:var(--muted);border-bottom:2px solid transparent;
+  cursor:pointer;transition:all .2s;text-transform:uppercase;white-space:nowrap}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(0,229,255,.05)}
+.section{display:none;padding:12px}.section.active{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;position:relative;overflow:hidden}
+.card.offense::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--bull),transparent)}
+.badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase}
+.badge.hold{background:rgba(90,106,122,.2);color:var(--muted);border:1px solid var(--muted)}
+.badge.buy{background:rgba(0,255,136,.15);color:var(--green);border:1px solid var(--green);animation:pg 1.5s infinite}
+.badge.sell{background:rgba(255,56,96,.15);color:var(--red);border:1px solid var(--red);animation:pr 1.5s infinite}
+@keyframes pg{0%,100%{box-shadow:0 0 0 0 rgba(0,255,136,.3)}50%{box-shadow:0 0 0 6px rgba(0,255,136,0)}}
+@keyframes pr{0%,100%{box-shadow:0 0 0 0 rgba(255,56,96,.3)}50%{box-shadow:0 0 0 6px rgba(255,56,96,0)}}
+.inp{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;
+  color:var(--text);font-family:'Share Tech Mono',monospace;font-size:22px;
+  padding:10px 12px;outline:none;-webkit-appearance:none;transition:border-color .2s}
+.inp:focus{border-color:var(--accent)}
+.inp-sm{font-size:16px;padding:8px 10px}
+.inp-label{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px}
+.band-bar{position:relative;height:8px;background:var(--bg);border-radius:4px;border:1px solid var(--border);margin:8px 0 4px;overflow:visible}
+.band-fill{height:100%;border-radius:4px;transition:width .3s,background .3s}
+.bm{position:absolute;top:-4px;width:3px;height:16px;border-radius:2px;transform:translateX(-50%)}
+.signal-box{border-radius:8px;padding:10px 12px;margin-top:8px;border:1px solid}
+.signal-box.buy{background:rgba(0,255,136,.08);border-color:var(--green)}
+.signal-box.sell{background:rgba(255,56,96,.08);border-color:var(--red)}
+.signal-title{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.signal-box.buy .signal-title{color:var(--green)}.signal-box.sell .signal-title{color:var(--red)}
+.signal-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px}
+.signal-val{font-family:'Share Tech Mono',monospace;font-weight:600}
+.stats-row{display:flex;gap:8px;margin-top:10px}
+.stat-box{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center}
+.stat-label{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.stat-val{font-family:'Share Tech Mono',monospace;font-size:14px;margin-top:2px}
+.sec-title{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  color:var(--muted);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)}
+.tbl td{padding:8px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.04)}
+.tbl td:not(:first-child){font-family:'Share Tech Mono',monospace;text-align:right}
+.tbl tr:last-child td{border-bottom:none}
+.ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.ov-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px}
+.ov-label{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.ov-val{font-family:'Share Tech Mono',monospace;font-size:20px;margin-top:4px}
+.pl-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.pl-row:last-child{border-bottom:none}
+.pl-right{text-align:right;font-family:'Share Tech Mono',monospace}
+.pos{color:var(--green)}.neg{color:var(--red)}.neu{color:var(--muted)}
+.set-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)}
+.set-row:last-child{border-bottom:none}
+.toggle{position:relative;width:44px;height:26px}
+.toggle input{opacity:0;width:0;height:0}
+.tgl-sl{position:absolute;inset:0;background:var(--border);border-radius:13px;cursor:pointer;transition:.3s}
+.tgl-sl:before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:var(--muted);border-radius:50%;transition:.3s}
+.toggle input:checked+.tgl-sl{background:var(--accent)}
+.toggle input:checked+.tgl-sl:before{transform:translateX(18px);background:var(--bg)}
+.btn{width:100%;padding:14px;border-radius:10px;border:1px solid var(--accent);
+  background:rgba(0,229,255,.08);color:var(--accent);font-family:'Rajdhani',sans-serif;
+  font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px}
+.btn.green{border-color:var(--green);color:var(--green);background:rgba(0,255,136,.08)}
+.btn.yellow{border-color:var(--yellow);color:var(--yellow);background:rgba(255,214,0,.08)}
+#alert-banner{position:fixed;top:0;left:0;right:0;z-index:999;padding:14px 16px;
+  font-size:14px;font-weight:700;display:none;align-items:center;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+#alert-banner.buy{background:var(--green);color:#000}
+#alert-banner.sell{background:var(--red);color:#fff}
+#alert-banner.info{background:var(--accent);color:#000}
+.alert-close{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:20px;cursor:pointer}
+.fab{position:fixed;bottom:20px;right:16px;z-index:200;width:54px;height:54px;
+  border-radius:50%;border:none;background:linear-gradient(135deg,var(--accent),#0077ff);
+  color:#000;font-size:22px;cursor:pointer;box-shadow:0 4px 20px rgba(0,229,255,.4);
+  display:flex;align-items:center;justify-content:center}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--muted);
+  border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+canvas{width:100%;border-radius:8px;background:var(--bg)}
+.range-btns{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.range-btn{padding:4px 10px;border-radius:6px;border:1px solid var(--border);
+  background:transparent;color:var(--muted);font-size:11px;cursor:pointer;
+  font-family:'Rajdhani',sans-serif;font-weight:700}
+.range-btn.active{border-color:var(--accent);background:rgba(0,229,255,.1);color:var(--accent)}
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 </style>
 </head>
 <body>
+<div id="alert-banner"><span id="alert-text"></span><span class="alert-close" onclick="closeAlert()">✕</span></div>
 
 <header>
-  <div class="h-title">SHANNON TERMINAL</div>
-  <div class="h-total" id="header-total">$0</div>
+  <div>
+    <div class="h-title">SHANNON ETF <span style="font-size:11px;background:rgba(0,229,255,.1);border:1px solid var(--accent);border-radius:4px;padding:2px 6px;-webkit-text-fill-color:var(--accent)">USD</span></div>
+    <div class="h-sub" id="last-update">Son güncelleme: —</div>
+  </div>
+  <div>
+    <div class="h-label">PORTFÖY</div>
+    <div class="h-total" id="header-total">—</div>
+  </div>
 </header>
 
-<div id="assets-container"></div>
-
-<div class="card">
-  <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">BİRİKMİŞ TOPLAM LOT (Snowball Line)</div>
-  <canvas id="lot-chart"></canvas>
-  <div id="lot-count" style="font-size:16px;font-weight:700;text-align:center;margin-top:10px;color:#fff;font-family:'Share Tech Mono'"></div>
-  <div class="lot-label">Toplam lot miktarındaki gelişim</div>
+<div class="tab-bar">
+  <div class="tab active" data-tab="signals" onclick="showTab(this)">📡 Sinyal</div>
+  <div class="tab" data-tab="portfolio" onclick="showTab(this)">📊 Portföy</div>
+  <div class="tab" data-tab="chart" onclick="showTab(this)">📈 Grafik</div>
+  <div class="tab" data-tab="pl" onclick="showTab(this)">💰 K/Z</div>
+  <div class="tab" data-tab="settings" onclick="showTab(this)">⚙️ Ayarlar</div>
 </div>
 
-<button class="btn" onclick="fetchAllPrices()">FİYATLARI VE SİNYALLERİ GÜNCELLE</button>
+<div id="tab-signals" class="section active"></div>
+
+<div id="tab-portfolio" class="section">
+  <div class="ov-grid">
+    <div class="ov-card"><div class="ov-label">Toplam ($)</div><div class="ov-val" id="ov-total">—</div></div>
+    <div class="ov-card"><div class="ov-label">Toplam K/Z</div><div class="ov-val" id="ov-daily">—</div></div>
+    <div class="ov-card"><div class="ov-label">En İyi</div><div class="ov-val" style="color:var(--green)" id="ov-best">—</div></div>
+    <div class="ov-card"><div class="ov-label">En Kötü</div><div class="ov-val" style="color:var(--red)" id="ov-worst">—</div></div>
+  </div>
+  <div class="sec-title"><span class="dot" style="background:var(--accent)"></span>Dağılım Analizi</div>
+  <div class="card">
+    <table class="tbl"><thead><tr><th>Ticker</th><th>Hedef %</th><th>Mevcut %</th><th>Sapma</th></tr></thead>
+    <tbody id="alloc-tbody"></tbody></table>
+  </div>
+</div>
+
+<div id="tab-chart" class="section">
+  <div style="background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.2);border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+    <div style="font-size:11px;color:var(--muted)">USD/TL <span id="chart-kur-time" style="font-size:10px"></span></div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:16px;color:var(--accent)" id="chart-kur-val">—</div>
+  </div>
+  <div class="card" style="padding:10px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="sec-title" style="margin:0;border:none;padding:0"><span class="dot" style="background:var(--accent)"></span>TOPLAM PORTFÖY ($)</div>
+      <div class="range-btns">
+        <button class="range-btn active" onclick="setChartRange(30,this)">1A</button>
+        <button class="range-btn" onclick="setChartRange(90,this)">3A</button>
+        <button class="range-btn" onclick="setChartRange(0,this)">TÜM</button>
+      </div>
+    </div>
+    <canvas id="chart-total-usd" height="160"></canvas>
+  </div>
+  <div class="card" style="padding:10px;margin-top:0">
+    <div class="sec-title" style="margin-bottom:8px"><span class="dot" style="background:var(--yellow)"></span>TOPLAM PORTFÖY (₺)</div>
+    <canvas id="chart-total-tl" height="140"></canvas>
+  </div>
+  <div class="card" style="padding:10px;margin-top:0">
+    <div class="sec-title" style="margin-bottom:8px"><span class="dot" style="background:var(--accent)"></span>LOT SAYACI GELİŞİMİ (ADET)</div>
+    <canvas id="chart-lot-accumulation" height="160"></canvas>
+    <div class="legend" id="lot-accum-legend"></div>
+  </div>
+  <div class="card" style="padding:10px;margin-top:0">
+    <div class="sec-title" style="margin-bottom:8px"><span class="dot" style="background:var(--green)"></span>HER VARLIK — $ GELİŞİMİ</div>
+    <canvas id="chart-each" height="160"></canvas>
+    <div class="legend" id="chart-legend"></div>
+  </div>
+  <div class="card" style="padding:10px;margin-top:0">
+    <div class="sec-title" style="margin-bottom:8px"><span class="dot" style="background:var(--bull)"></span>% BÜYÜME (Başlangıçtan)</div>
+    <canvas id="chart-pct" height="140"></canvas>
+    <div class="legend" id="chart-pct-legend"></div>
+  </div>
+  <div class="card" style="padding:10px;margin-top:0">
+    <div class="sec-title" style="margin-bottom:8px"><span class="dot" style="background:var(--yellow)"></span>GÜNLÜK DEĞİŞİM (%)</div>
+    <canvas id="chart-daily" height="120"></canvas>
+  </div>
+</div>
+
+<div id="tab-pl" class="section">
+  <div class="sec-title"><span class="dot" style="background:var(--green)"></span>Kâr / Zarar</div>
+  <div class="card">
+    <div id="pl-container"></div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between">
+      <span style="font-weight:700">TOPLAM</span>
+      <div class="pl-right"><div id="pl-total-pct">—</div><div id="pl-total-usd" style="font-size:11px;color:var(--muted)">—</div></div>
+    </div>
+  </div>
+  <div class="sec-title" style="margin-top:12px"><span class="dot" style="background:var(--yellow)"></span>Lot & Maliyet Girişi</div>
+  <div class="card" id="lot-card" style="padding:0"></div>
+</div>
+
+<div id="tab-settings" class="section">
+  <div class="sec-title"><span class="dot" style="background:var(--yellow)"></span>Uyarı Ayarları</div>
+  <div class="card">
+    <div class="set-row"><div><div style="font-size:14px">Ses Uyarısı</div></div><label class="toggle"><input type="checkbox" id="sound-toggle" checked><span class="tgl-sl"></span></label></div>
+    <div class="set-row"><div><div style="font-size:14px">Titreşim</div></div><label class="toggle"><input type="checkbox" id="vibrate-toggle" checked><span class="tgl-sl"></span></label></div>
+    <div class="set-row"><div><div style="font-size:14px">Otomatik Yenile (60s)</div></div><label class="toggle"><input type="checkbox" id="auto-refresh" checked onchange="toggleAutoRefresh()"><span class="tgl-sl"></span></label></div>
+  </div>
+  <div class="card" style="margin-top:4px">
+    <button class="btn" onclick="fetchAllPrices()"><span id="refresh-icon">⟳</span> FİYATLARI GÜNCELLE</button>
+    <button class="btn green" onclick="saveAndCopy()">💾 VERİLERİ KAYDET & KOPYALA</button>
+    <div id="save-code-wrap" style="display:none;margin-top:10px">
+      <textarea id="save-code" readonly onclick="this.select()" style="width:100%;height:80px;background:var(--bg);border:1px solid var(--green);border-radius:8px;color:var(--green);font-family:'Share Tech Mono',monospace;font-size:11px;padding:8px;resize:none;outline:none"></textarea>
+      <button class="btn yellow" style="margin-top:8px" onclick="showLoadInput()">📂 KAYITLI VERİYİ YÜKLE</button>
+      <div id="load-wrap" style="display:none;margin-top:8px">
+        <textarea id="load-code" placeholder="Kayıt kodunu yapıştır..." style="width:100%;height:80px;background:var(--bg);border:1px solid var(--yellow);border-radius:8px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:11px;padding:8px;resize:none;outline:none"></textarea>
+        <button class="btn yellow" style="margin-top:6px" onclick="loadFromCode()">✓ YÜKLE</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<button class="fab" onclick="fetchAllPrices()">⟳</button>
 
 <script>
-// VARLIK TANIMLARI (Buradan hedef ve limitleri değiştirebilirsin)
-const PORT = [
-  {ticker:'AMDG', target:20, buyLim:18, sellLim:22, color:'#00e5ff'},
-  {ticker:'SPXL', target:20, buyLim:18, sellLim:22, color:'#ff6d00'},
-  {ticker:'NVDU', target:20, buyLim:18, sellLim:22, color:'#00ff88'},
-  {ticker:'TSLL', target:20, buyLim:18, sellLim:22, color:'#ffd700'},
-  {ticker:'TMF',  target:20, buyLim:18, sellLim:22, color:'#a78bfa'}
+const MANIFEST={name:"Shannon ETF",short_name:"Shannon ETF",display:"standalone",background_color:"#0a0c0f",theme_color:"#00e5ff",start_url:"./",icons:[{src:"data:image/svg+xml,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='36' fill='%230a0c0f'/><text x='96' y='130' text-anchor='middle' font-size='110' font-family='serif'>📊</text></svg>"),sizes:"192x192",type:"image/svg+xml"}]};
+const blob=new Blob([JSON.stringify(MANIFEST)],{type:'application/json'});
+document.getElementById('manifest-link').href=URL.createObjectURL(blob);
+
+const PORT=[
+  {ticker:'AMDG', name:'AMD Growth',    target:20, buyLim:18, sellLim:22},
+  {ticker:'SPXL', name:'S&P 3x Bull',   target:20, buyLim:18, sellLim:22},
+  {ticker:'NVDU', name:'NVIDIA 2x',     target:20, buyLim:18, sellLim:22},
+  {ticker:'TSLL', name:'Tesla 2x Bull', target:20, buyLim:18, sellLim:22},
+  {ticker:'TMF',  name:'T-Bond 3x Bull',target:20, buyLim:18, sellLim:22},
 ];
+const COLORS=['#00e5ff','#ff6d00','#00ff88','#ffd700','#a78bfa'];
 
-// MEVCUT LOT MİKTARLARIN (Görselden aldığım veriler)
-let myLots = { 'AMDG': 758, 'SPXL': 85, 'NVDU': 430, 'TSLL': 310, 'TMF': 150 };
-let prices = {};
-let lotHistory = [];
+let prices={},prevClose={},startPrices={},startLots={},arTimer=null;
+let priceHistory=[];
+let kurVal=0;
+let chartRange=30;
 
-function init() {
-  const container = document.getElementById('assets-container');
-  PORT.forEach(p => {
-    const div = document.createElement('div');
-    div.className = 'card';
-    div.innerHTML = `
-      <div class="ticker-row">
-        <span style="color:${p.color}">${p.ticker}</span>
-        <span id="weight-${p.ticker}" style="font-family:'Share Tech Mono'">%0</span>
+window.onload=()=>{loadState();buildSignalCards();buildLotInputs();fillInputs();refreshDisplays();fetchAllPrices();fetchKur();startAutoRefresh();};
+window.onbeforeunload=()=>{saveState();};
+
+async function fetchKur(){
+  try{
+    const url='https://query1.finance.yahoo.com/v8/finance/chart/USDTRY=X?interval=1d&range=1d';
+    let res;
+    try{res=await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);}catch(e){res=await fetch(url);}
+    if(!res.ok)throw new Error();
+    const d=await res.json();
+    const m=d?.chart?.result?.[0]?.meta;
+    if(m&&m.regularMarketPrice>0){
+      kurVal=m.regularMarketPrice;
+      document.getElementById('chart-kur-val').textContent=kurVal.toFixed(2);
+      document.getElementById('chart-kur-time').textContent=new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
+    }
+  }catch(e){}
+}
+
+function showTab(el){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-'+el.dataset.tab).classList.add('active');
+  if(el.dataset.tab==='chart')setTimeout(drawAllCharts,50);
+}
+
+function fillInputs(){PORT.forEach(p=>{const i=document.getElementById('price-'+p.ticker);if(i&&prices[p.ticker])i.value=prices[p.ticker].toFixed(2);const s=document.getElementById('sp-'+p.ticker);if(s&&startPrices[p.ticker])s.value=startPrices[p.ticker];const l=document.getElementById('sl-'+p.ticker);if(l&&startLots[p.ticker])l.value=startLots[p.ticker];});}
+
+const fmt2=n=>n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmt4=n=>n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:4});
+function totalVal(){return PORT.reduce((s,p)=>{const pr=prices[p.ticker]||0,lo=startLots[p.ticker]||0;return s+(pr>0&&lo>0?pr*lo:0);},0);}
+function posVal(p){const pr=prices[p.ticker]||0,lo=startLots[p.ticker]||0;return pr>0&&lo>0?pr*lo:0;}
+function curPct(p){const tv=totalVal();return tv>0?posVal(p)/tv*100:p.target;}
+function signalOf(p){const pr=prices[p.ticker]||0,lo=startLots[p.ticker]||0;if(!pr||!lo)return'hold';const cp=curPct(p);if(cp<=p.buyLim)return'buy';if(cp>=p.sellLim)return'sell';return'hold';}
+
+function buildSignalCards(){
+  const c=document.getElementById('tab-signals');c.innerHTML='';
+  const h=document.createElement('div');h.className='sec-title';
+  h.innerHTML=`<span class="dot" style="background:var(--accent)"></span>PORTFÖY — %${PORT.reduce((s,p)=>s+p.target,0)}`;
+  c.appendChild(h);
+  PORT.forEach((p,pi)=>{
+    const div=document.createElement('div');div.className='card offense';
+    div.innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div><div style="font-size:20px;font-weight:700;color:${COLORS[pi]}">${p.ticker}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">${p.name}</div></div>
+        <div style="text-align:right">
+          <span class="badge hold" id="badge-${p.ticker}">● BEKLİYOR</span>
+          <div id="pchange-${p.ticker}" style="font-size:11px;margin-top:4px;font-family:'Share Tech Mono',monospace;color:var(--muted)"></div>
+        </div>
       </div>
-      <div style="font-size:11px; color:var(--muted)">GÜNCEL FİYAT ($)</div>
-      <input type="number" class="inp" id="price-${p.ticker}" value="0" step="0.01" onchange="updateUI()">
-      <div class="band-bar"><div class="band-fill" id="fill-${p.ticker}" style="background:${p.color}"></div></div>
-      <div id="sig-${p.ticker}"></div>
-    `;
-    container.appendChild(div);
+      <label class="inp-label">GÜNCEL FİYAT ($)</label>
+      <input class="inp" type="number" inputmode="decimal" step="0.01" placeholder="0.00"
+        id="price-${p.ticker}" onfocus="this.style.borderColor='var(--accent)'"
+        onblur="this.style.borderColor='var(--border)'; commitPrice('${p.ticker}', this.value)">
+      <div style="display:flex;justify-content:space-between;margin-top:8px;padding:0 2px">
+        <span style="font-size:11px;color:var(--muted)">MEVCUT AĞIRLIK</span>
+        <span style="font-family:'Share Tech Mono',monospace;font-size:13px">
+          <span id="cpct-${p.ticker}">—</span><span style="color:var(--muted)"> / ${p.target}%</span></span>
+      </div>
+      <div style="font-size:10px;color:var(--muted);display:flex;justify-content:space-between;margin-top:8px">
+        <span style="color:var(--green)">AL ≤ ${p.buyLim}%</span><span>BANT ±%2</span>
+        <span style="color:var(--red)">SAT ≥ ${p.sellLim}%</span>
+      </div>
+      <div class="band-bar">
+        <div class="band-fill" id="bfill-${p.ticker}" style="width:0%;background:var(--accent)"></div>
+        <div class="bm" id="bm-buy-${p.ticker}" style="background:var(--green)"></div>
+        <div class="bm" id="bm-sell-${p.ticker}" style="background:var(--red)"></div>
+        <div class="bm" id="bm-cur-${p.ticker}" style="background:var(--yellow);width:2px"></div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-box"><div class="stat-label">Hedef $</div><div class="stat-val" id="tval-${p.ticker}">—</div></div>
+        <div class="stat-box"><div class="stat-label">Mevcut $</div><div class="stat-val" id="cval-${p.ticker}">—</div></div>
+        <div class="stat-box"><div class="stat-label">Adet</div><div class="stat-val" id="lot-disp-${p.ticker}">—</div></div>
+      </div>
+      <div id="sigbox-${p.ticker}"></div>`;
+    c.appendChild(div);
   });
-  fetchAllPrices();
 }
 
-async function fetchAllPrices() {
-  const btn = document.querySelector('.btn');
-  btn.textContent = "GÜNCELLENİYOR...";
-  
-  for(const p of PORT) {
-    try {
-      // Yahoo Finance verisi için güvenli proxy
-      const url = `https://api.allorigins.win/raw?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/'+p.ticker)}`;
-      const res = await fetch(url);
-      const d = await res.json();
-      const pr = d.chart.result[0].meta.regularMarketPrice;
-      if(pr) {
-        prices[p.ticker] = pr;
-        document.getElementById(`price-${p.ticker}`).value = pr.toFixed(2);
-      }
-    } catch(e) { console.log("Veri çekme hatası:", p.ticker); }
-  }
-  updateUI();
-  btn.textContent = "FİYATLARI VE SİNYALLERİ GÜNCELLE";
+function commitPrice(t,v){const n=parseFloat(v);if(!isNaN(n)&&n>0){prevClose[t]=prices[t]||n;prices[t]=n;}saveState();refreshDisplays();checkSignal(t);}
+function commitSP(t,v){const n=parseFloat(v);startPrices[t]=isNaN(n)?0:n;saveState();refreshDisplays();}
+function commitSL(t,v){const n=parseFloat(v);startLots[t]=isNaN(n)?0:n;saveState();refreshDisplays();}
+
+function buildLotInputs(){
+  const c=document.getElementById('lot-card');
+  c.innerHTML=PORT.map((p,pi)=>`
+    <div style="padding:14px;${pi<PORT.length-1?'border-bottom:1px solid var(--border)':''}">
+      <div style="font-size:16px;font-weight:700;margin-bottom:10px;color:${COLORS[pi]}">
+        ${p.ticker} <span style="font-size:11px;color:var(--muted);font-weight:400">${p.name}</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="inp-label">ORT. MALİYET ($)</label>
+          <input class="inp inp-sm" type="number" inputmode="decimal" step="0.01" placeholder="0.00"
+            id="sp-${p.ticker}" value="${startPrices[p.ticker]||''}"
+            onfocus="this.style.borderColor='var(--accent)'"
+            onblur="this.style.borderColor='var(--border)'; commitSP('${p.ticker}', this.value)"></div>
+        <div><label class="inp-label">ADET</label>
+          <input class="inp inp-sm" type="number" inputmode="decimal" step="0.001" placeholder="0"
+            id="sl-${p.ticker}" value="${startLots[p.ticker]||''}"
+            onfocus="this.style.borderColor='var(--accent)'"
+            onblur="this.style.borderColor='var(--border)'; commitSL('${p.ticker}', this.value)"></div>
+      </div>
+    </div>`).join('');
 }
 
-function updateUI() {
-  let totalUSD = 0;
-  let currentTotalLots = 0;
-
-  // Önce toplam portföy değerini hesapla
-  PORT.forEach(p => {
-    let inputVal = parseFloat(document.getElementById(`price-${p.ticker}`).value) || 0;
-    prices[p.ticker] = inputVal;
-    totalUSD += inputVal * myLots[p.ticker];
-    currentTotalLots += myLots[p.ticker];
-  });
-  
-  document.getElementById('header-total').textContent = '$' + totalUSD.toLocaleString(undefined, {maximumFractionDigits:0});
-
-  // Sonra ağırlıkları ve sinyalleri hesapla
-  PORT.forEach(p => {
-    let assetValue = prices[p.ticker] * myLots[p.ticker];
-    let weight = totalUSD > 0 ? (assetValue / totalUSD) * 100 : 0;
-    
-    document.getElementById(`weight-${p.ticker}`).textContent = '%' + weight.toFixed(1);
-    document.getElementById(`fill-${p.ticker}`).style.width = weight + '%';
-    
-    const sigDiv = document.getElementById(`sig-${p.ticker}`);
-    if(weight >= p.sellLim) {
-      sigDiv.innerHTML = `<div class="signal-box sell">🚨 SATIŞ ZAMANI (Ağırlık: %${weight.toFixed(1)})</div>`;
-    } else if(weight <= p.buyLim) {
-      sigDiv.innerHTML = `<div class="signal-box buy">✅ ALIM ZAMANI (Ağırlık: %${weight.toFixed(1)})</div>`;
-    } else {
-      sigDiv.innerHTML = '';
+function refreshDisplays(){
+  const tv=totalVal();
+  const sigL={hold:'● BEKLİYOR',buy:'▲ AL SİNYALİ',sell:'▼ SAT SİNYALİ'};
+  PORT.forEach(p=>{
+    const pr=prices[p.ticker]||0,lo=startLots[p.ticker]||0,cp=curPct(p),sig=signalOf(p);
+    const badge=document.getElementById('badge-'+p.ticker);
+    if(badge){badge.className='badge '+sig;badge.textContent=sigL[sig];}
+    const pEl=document.getElementById('pchange-'+p.ticker);
+    if(pEl&&prevClose[p.ticker]>0&&pr>0){const ch=(pr-prevClose[p.ticker])/prevClose[p.ticker]*100;pEl.textContent=(ch>=0?'+':'')+ch.toFixed(2)+'%';pEl.style.color=ch>0?'var(--green)':ch<0?'var(--red)':'var(--muted)';}
+    const cpEl=document.getElementById('cpct-'+p.ticker);
+    if(cpEl){cpEl.textContent=cp.toFixed(2)+'%';cpEl.style.color=sig==='buy'?'var(--green)':sig==='sell'?'var(--red)':'var(--text)';}
+    const bMin=p.buyLim-2,bMax=p.sellLim+2,bRange=bMax-bMin;
+    const buyPos=((p.buyLim-bMin)/bRange*100).toFixed(1),sellPos=((p.sellLim-bMin)/bRange*100).toFixed(1),curPos=Math.min(100,Math.max(0,(cp-bMin)/bRange*100)).toFixed(1);
+    const fillCol=sig==='buy'?'var(--green)':sig==='sell'?'var(--red)':'var(--accent)';
+    const fill=document.getElementById('bfill-'+p.ticker);
+    if(fill){fill.style.width=curPos+'%';fill.style.background=fillCol;}
+    ['buy','sell','cur'].forEach(k=>{const el=document.getElementById(`bm-${k}-${p.ticker}`);if(el)el.style.left=(k==='buy'?buyPos:k==='sell'?sellPos:curPos)+'%';});
+    const tvEl=document.getElementById('tval-'+p.ticker),cvEl=document.getElementById('cval-'+p.ticker),ldEl=document.getElementById('lot-disp-'+p.ticker);
+    if(tvEl)tvEl.textContent=tv>0?'$'+fmt2(tv*p.target/100):'—';
+    if(cvEl)cvEl.textContent=posVal(p)>0?'$'+fmt2(posVal(p)):'—';
+    if(ldEl)ldEl.textContent=lo||'—';
+    const sb=document.getElementById('sigbox-'+p.ticker);
+    if(sb){
+      if(sig==='buy'&&pr>0&&tv>0){const tS=tv*p.target/100/pr,diff=Math.max(0,tS-lo);sb.innerHTML=`<div class="signal-box buy"><div class="signal-title">⬆ AL SİNYALİ</div><div class="signal-row"><span>Hedef Adet</span><span class="signal-val" style="color:var(--green)">${tS.toFixed(3)}</span></div><div class="signal-row"><span>Alım Adedi</span><span class="signal-val" style="color:var(--green)">${diff.toFixed(3)}</span></div><div class="signal-row"><span>Alım Tutarı</span><span class="signal-val" style="color:var(--green)">$${fmt2(diff*pr)}</span></div></div>`+rebalanceSuggestion(p.ticker);}
+      else if(sig==='sell'&&pr>0&&tv>0){const tS=tv*p.target/100/pr,diff=Math.max(0,lo-tS);sb.innerHTML=`<div class="signal-box sell"><div class="signal-title">⬇ SAT SİNYALİ</div><div class="signal-row"><span>Hedef Adet</span><span class="signal-val" style="color:var(--red)">${tS.toFixed(3)}</span></div><div class="signal-row"><span>Satım Adedi</span><span class="signal-val" style="color:var(--red)">${diff.toFixed(3)}</span></div><div class="signal-row"><span>Satım Tutarı</span><span class="signal-val" style="color:var(--red)">$${fmt2(diff*pr)}</span></div></div>`+rebalanceBuySuggestion(p.ticker);}
+      else sb.innerHTML='';
     }
   });
-
-  // Lot gelişimini kaydet
-  lotHistory.push(currentTotalLots);
-  if(lotHistory.length > 30) lotHistory.shift();
-  drawLotChart();
-  document.getElementById('lot-count').textContent = `${currentTotalLots.toFixed(0)} LOT`;
+  updateOverview(tv);renderAllocTable();renderPL();
+  if(tv>0){
+    const snap={date:new Date().toISOString(),prices:{},lots:{},totalUSD:tv,totalTL:kurVal>0?tv*kurVal:0,kur:kurVal};
+    PORT.forEach(p=>{
+      snap.prices[p.ticker]=prices[p.ticker]||0;
+      snap.lots[p.ticker]=startLots[p.ticker]||0;
+    });
+    const last=priceHistory[priceHistory.length-1];
+    if(!last||new Date()-new Date(last.date)>300000)priceHistory.push(snap);
+    if(priceHistory.length>200)priceHistory.shift();
+  }
 }
 
-function drawLotChart() {
-  const canvas = document.getElementById('lot-chart');
-  const ctx = canvas.getContext('2d');
-  const dpr = window.devicePixelRatio || 1;
-  const rect = canvas.getBoundingClientRect();
-  canvas.width = rect.width * dpr;
-  canvas.height = rect.height * dpr;
-  ctx.scale(dpr, dpr);
+function updateOverview(tv){
+  document.getElementById('header-total').textContent=tv>0?'$'+fmt2(tv):'—';
+  document.getElementById('ov-total').textContent=tv>0?'$'+fmt2(tv):'—';
+  let best={pct:-Infinity,t:''},worst={pct:Infinity,t:''};
+  PORT.forEach(p=>{const sp=startPrices[p.ticker]||0,pr=prices[p.ticker]||0;if(sp>0&&pr>0){const pct=(pr-sp)/sp*100;if(pct>best.pct){best.pct=pct;best.t=p.ticker;}if(pct<worst.pct){worst.pct=pct;worst.t=p.ticker;}}});
+  document.getElementById('ov-best').textContent=best.t?`${best.t} ${best.pct>=0?'+':''}${best.pct.toFixed(1)}%`:'—';
+  document.getElementById('ov-worst').textContent=worst.t?`${worst.t} ${worst.pct>=0?'+':''}${worst.pct.toFixed(1)}%`:'—';
+}
 
-  const W = rect.width;
-  const H = rect.height;
+function renderAllocTable(){const tbody=document.getElementById('alloc-tbody');if(!tbody)return;tbody.innerHTML='';PORT.forEach((p,pi)=>{const cp=curPct(p),dev=cp-p.target,dc=Math.abs(dev)<0.5?'var(--muted)':dev>0?'var(--red)':'var(--green)';tbody.innerHTML+=`<tr><td style="color:${COLORS[pi]};font-weight:700">${p.ticker}</td><td>${p.target}%</td><td>${cp.toFixed(2)}%</td><td style="color:${dc}">${dev>=0?'+':''}${dev.toFixed(2)}%</td></tr>`;});}
+
+function renderPL(){const c=document.getElementById('pl-container');if(!c)return;let html='',totalPL=0,totalCost=0;PORT.forEach((p,pi)=>{const sp=startPrices[p.ticker]||0,lo=startLots[p.ticker]||0,pr=prices[p.ticker]||0;if(!lo)return;const cost=sp*lo,cur=pr>0?pr*lo:cost,pl=cur-cost,pct=cost>0?pl/cost*100:0;totalPL+=pl;totalCost+=cost;const cls=pct>0?'pos':pct<0?'neg':'neu',arr=pct>0?'▲':pct<0?'▼':'●';html+=`<div class="pl-row"><div><div style="font-weight:700;font-size:15px;color:${COLORS[pi]}">${p.ticker}</div><div style="font-size:11px;color:var(--muted)">${lo} × $${sp?fmt4(sp):'?'}</div></div><div class="pl-right"><div class="${cls}">${arr} ${pct>=0?'+':''}${pct.toFixed(2)}%</div><div class="${cls}" style="font-size:11px">${pl>=0?'+':''}$${fmt2(pl)}</div></div></div>`;});c.innerHTML=html;const tPct=totalCost>0?totalPL/totalCost*100:0,tc=tPct>0?'pos':tPct<0?'neg':'neu';const e1=document.getElementById('pl-total-pct'),e2=document.getElementById('pl-total-usd');if(e1){e1.className=tc;e1.textContent=`${tPct>=0?'+':''}${tPct.toFixed(2)}%`;}if(e2){e2.className=tc;e2.textContent=`${totalPL>=0?'+':''}$${fmt2(totalPL)}`;}const ov=document.getElementById('ov-daily');if(ov){ov.textContent=`${tPct>=0?'+':''}${tPct.toFixed(2)}%`;ov.style.color=tPct>0?'var(--green)':tPct<0?'var(--red)':'var(--muted)';}}
+
+function checkSignal(ticker){const p=PORT.find(x=>x.ticker===ticker);if(!p)return;const sig=signalOf(p);if(sig==='hold')return;triggerAlert(sig,`${ticker} ${sig==='buy'?'AL':'SAT'} SİNYALİ — %${curPct(p).toFixed(2)}`);}
+
+function rebalanceSuggestion(buyTicker){
+  const tv=totalVal();if(!tv)return'';
+  const buyP=PORT.find(p=>p.ticker===buyTicker);if(!buyP)return'';
+  const needed=tv*buyP.target/100-posVal(buyP);if(needed<=0)return'';
+  const sellers=PORT.filter(p=>p.ticker!==buyTicker&&curPct(p)>p.target&&prices[p.ticker]>0);
+  sellers.sort((a,b)=>curPct(b)-b.target-(curPct(a)-a.target));
+  if(sellers.length===0)return'';
+  let html=`<div style="margin-top:8px;padding:10px 12px;background:rgba(0,229,255,.06);border:1px solid var(--accent);border-radius:8px"><div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--accent);margin-bottom:6px">⚖️ DENGE — Alım İçin Sat</div><div style="font-size:11px;color:var(--muted);margin-bottom:8px">Alım tutarı: $${fmt2(needed)}</div>`;
+  let remaining=needed;
+  for(const s of sellers){if(remaining<=0)break;const excess=posVal(s)-tv*s.target/100;if(excess<=0)continue;const sellAmt=Math.min(excess,remaining);const sellShares=sellAmt/(prices[s.ticker]||1);if(sellShares<=0.001)continue;html+=`<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="color:var(--red)">↓ ${s.ticker} sat</span><span style="font-family:'Share Tech Mono',monospace;color:var(--red)">${sellShares.toFixed(3)} adet / $${fmt2(sellAmt)}</span></div>`;remaining-=sellAmt;}
+  if(remaining>0.01)html+=`<div style="font-size:11px;color:var(--muted);margin-top:4px">Ek nakit: $${fmt2(remaining)}</div>`;
+  return html+'</div>';
+}
+
+function rebalanceBuySuggestion(sellTicker){
+  const tv=totalVal();if(!tv)return'';
+  const sellP=PORT.find(p=>p.ticker===sellTicker);if(!sellP)return'';
+  const sellPr=prices[sellTicker]||0;if(!sellPr)return'';
+  const lo=startLots[sellTicker]||0;
+  const sellAmount=Math.max(0,lo-tv*sellP.target/100/sellPr)*sellPr;if(sellAmount<=0)return'';
+  const buyers=PORT.filter(p=>p.ticker!==sellTicker&&curPct(p)<p.target);
+  buyers.sort((a,b)=>(b.target-curPct(b))-(a.target-curPct(a)));
+  if(buyers.length===0)return'';
+  let html=`<div style="margin-top:8px;padding:10px 12px;background:rgba(0,255,136,.06);border:1px solid var(--green);border-radius:8px"><div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--green);margin-bottom:6px">⚖️ DENGE — Satış Tutarıyla Al</div><div style="font-size:11px;color:var(--muted);margin-bottom:8px">Satış: $${fmt2(sellAmount)}</div>`;
+  let remaining=sellAmount;
+  for(const b of buyers){if(remaining<=0)break;const pr=prices[b.ticker]||0;if(!pr)continue;const deficit=tv*b.target/100-posVal(b);if(deficit<=0)continue;const buyShares=Math.min(deficit,remaining)/pr;if(buyShares<=0.001)continue;html+=`<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="color:var(--green)">↑ ${b.ticker} al</span><span style="font-family:'Share Tech Mono',monospace;color:var(--green)">${buyShares.toFixed(3)} adet / $${fmt2(buyShares*pr)}</span></div>`;remaining-=buyShares*pr;}
+  if(remaining>0.01)html+=`<div style="font-size:11px;color:var(--muted);margin-top:4px">Kalan: $${fmt2(remaining)}</div>`;
+  return html+'</div>';
+}
+
+function triggerAlert(type,msg){if(type!=='info'){if(document.getElementById('vibrate-toggle').checked&&navigator.vibrate)navigator.vibrate(type==='buy'?[100,50,100]:[200,50,200,50,200]);if(document.getElementById('sound-toggle').checked){try{const ctx=new(window.AudioContext||window.webkitAudioContext)(),o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=type==='buy'?880:440;o.type='sine';g.gain.setValueAtTime(0.3,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.5);o.start();o.stop(ctx.currentTime+0.5);}catch(e){}}}const b=document.getElementById('alert-banner');document.getElementById('alert-text').textContent=(type==='buy'?'⬆ ':type==='sell'?'⬇ ':'ℹ ')+msg;b.className=type||'info';b.style.display='flex';setTimeout(closeAlert,5000);}
+function closeAlert(){document.getElementById('alert-banner').style.display='none';}
+
+function setChartRange(r,btn){chartRange=r;document.querySelectorAll('.range-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');drawAllCharts();}
+
+function drawAllCharts(){
+  if(priceHistory.length<2)return;
+  const data=chartRange>0?priceHistory.slice(-chartRange):priceHistory;
+  const dpr=window.devicePixelRatio||1;
+  drawLineChart('chart-total-usd',data,e=>[{v:e.totalUSD,c:'#00e5ff'}],160,'$',dpr);
+  drawLineChart('chart-total-tl',data,e=>[{v:e.totalTL,c:'#a78bfa'}],140,'₺',dpr);
   
-  ctx.clearRect(0, 0, W, H);
-  if(lotHistory.length < 2) return;
+  // Lot Biriktirme Grafiği Çizimi
+  drawLotAccumulationChart(data, dpr);
 
-  const min = Math.min(...lotHistory) * 0.995;
-  const max = Math.max(...lotHistory) * 1.005;
-  const range = max - min || 1;
-
-  ctx.beginPath();
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 3;
-  ctx.lineJoin = 'round';
-  ctx.shadowBlur = 10;
-  ctx.shadowColor = 'rgba(255,255,255,0.5)';
-
-  lotHistory.forEach((val, i) => {
-    const x = (i / (lotHistory.length - 1)) * W;
-    const y = H - ((val - min) / range) * H;
-    if(i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  });
-  ctx.stroke();
+  const c3=document.getElementById('chart-each');
+  const ctx3=c3.getContext('2d');
+  c3.width=(c3.offsetWidth||300)*dpr;c3.height=160*dpr;ctx3.scale(dpr,dpr);
+  const W3=c3.offsetWidth||300,H3=160;ctx3.clearRect(0,0,W3,H3);
+  const allVals=[];PORT.forEach(p=>data.forEach(e=>e.prices[p.ticker]>0&&allVals.push(e.prices[p.ticker])));
+  if(allVals.length<2){ctx3.fillStyle='rgba(90,106,122,.5)';ctx3.font='12px Rajdhani';ctx3.textAlign='center';ctx3.fillText('Yeterli veri yok',W3/2,H3/2);return;}
+  const minV=Math.min(...allVals)*0.99,maxV=Math.max(...allVals)*1.01,range=maxV-minV||1;
+  function toY3(v){return H3-15-(v-minV)/range*(H3-30);}
+  function toX3(i){return 40+(i/(data.length-1||1))*(W3-50);}
+  drawGrid(ctx3,W3,H3);drawYLabels(ctx3,minV,maxV,H3,'$');
+  PORT.forEach((p,pi)=>{ctx3.strokeStyle=COLORS[pi];ctx3.lineWidth=1.5;ctx3.beginPath();let s=false;data.forEach((e,i)=>{const v=e.prices[p.ticker];if(v>0){if(!s){ctx3.moveTo(toX3(i),toY3(v));s=true;}else ctx3.lineTo(toX3(i),toY3(v));}});ctx3.stroke();});
+  drawXLabels(ctx3,data,toX3,H3);
+  document.getElementById('chart-legend').innerHTML=PORT.map((p,pi)=>`<div class="legend-item"><span class="legend-dot" style="background:${COLORS[pi]}"></span>${p.ticker}</div>`).join('');
+  const c4=document.getElementById('chart-pct');
+  const ctx4=c4.getContext('2d');
+  c4.width=(c4.offsetWidth||300)*dpr;c4.height=140*dpr;ctx4.scale(dpr,dpr);
+  const W4=c4.offsetWidth||300,H4=140;ctx4.clearRect(0,0,W4,H4);
+  drawGrid(ctx4,W4,H4);
+  const pctLines=PORT.map((p,pi)=>{const firstVal=data.find(e=>e.prices[p.ticker]>0)?.prices[p.ticker]||0;return{ticker:p.ticker,color:COLORS[pi],vals:data.map(e=>firstVal>0?(e.prices[p.ticker]-firstVal)/firstVal*100:0)};});
+  const firstTotal=data[0]?.totalUSD||0;
+  pctLines.push({ticker:'Toplam',color:'#fff',vals:data.map(e=>firstTotal>0?(e.totalUSD-firstTotal)/firstTotal*100:0)});
+  const allPcts=pctLines.flatMap(l=>l.vals);
+  const minP=Math.min(...allPcts)-1,maxP=Math.max(...allPcts)+1,rP=maxP-minP||1;
+  function toYp(v){return H4-15-(v-minP)/rP*(H4-30);}
+  function toXp(i){return 40+(i/(data.length-1||1))*(W4-50);}
+  ctx4.strokeStyle='rgba(255,255,255,.15)';ctx4.lineWidth=1;ctx4.setLineDash([4,4]);
+  ctx4.beginPath();ctx4.moveTo(40,toYp(0));ctx4.lineTo(W4-10,toYp(0));ctx4.stroke();ctx4.setLineDash([]);
+  drawYLabels(ctx4,minP,maxP,H4,'%');
+  pctLines.forEach(l=>{ctx4.strokeStyle=l.color;ctx4.lineWidth=l.ticker==='Toplam'?2:1.5;ctx4.beginPath();l.vals.forEach((v,i)=>i===0?ctx4.moveTo(toXp(i),toYp(v)):ctx4.lineTo(toXp(i),toYp(v)));ctx4.stroke();});
+  drawXLabels(ctx4,data,toXp,H4);
+  document.getElementById('chart-pct-legend').innerHTML=[...PORT.map((p,pi)=>`<div class="legend-item"><span class="legend-dot" style="background:${COLORS[pi]}"></span>${p.ticker}</div>`),`<div class="legend-item"><span class="legend-dot" style="background:#fff"></span>Toplam</div>`].join('');
+  const c5=document.getElementById('chart-daily');
+  const ctx5=c5.getContext('2d');
+  c5.width=(c5.offsetWidth||300)*dpr;c5.height=120*dpr;ctx5.scale(dpr,dpr);
+  const W5=c5.offsetWidth||300,H5=120;ctx5.clearRect(0,0,W5,H5);
+  const dailyPcts=data.map((e,i)=>i===0?0:(e.totalUSD-data[i-1].totalUSD)/(data[i-1].totalUSD||1)*100);
+  const maxD=Math.max(Math.abs(Math.min(...dailyPcts)),Math.abs(Math.max(...dailyPcts)))||1;
+  function toYd(v){return H5/2-v/maxD*(H5/2-10);}
+  function toXd(i){return 40+(i/(data.length-1||1))*(W5-50);}
+  drawGrid(ctx5,W5,H5);
+  ctx5.strokeStyle='rgba(255,255,255,.15)';ctx5.lineWidth=1;ctx5.setLineDash([4,4]);
+  ctx5.beginPath();ctx5.moveTo(40,H5/2);ctx5.lineTo(W5-10,H5/2);ctx5.stroke();ctx5.setLineDash([]);
+  const barW=Math.max(2,Math.floor((W5-50)/data.length-2));
+  dailyPcts.forEach((v,i)=>{if(i===0)return;const x=toXd(i)-barW/2,y0=H5/2,h=Math.abs(toYd(v)-H5/2);ctx5.fillStyle=v>=0?'rgba(0,255,136,.7)':'rgba(255,56,96,.7)';ctx5.fillRect(x,v>=0?y0-h:y0,barW,h);});
+  ctx5.fillStyle='rgba(90,106,122,.7)';ctx5.font='9px Share Tech Mono';ctx5.textAlign='right';
+  ctx5.fillText('+'+maxD.toFixed(1)+'%',36,12);ctx5.fillText('-'+maxD.toFixed(1)+'%',36,H5-2);
+  drawXLabels(ctx5,data,toXd,H5);
 }
 
-window.onload = init;
+// YENİ: Lot Biriktirme Grafiği Fonksiyonu
+function drawLotAccumulationChart(data, dpr) {
+  const c = document.getElementById('chart-lot-accumulation');
+  const ctx = c.getContext('2d');
+  c.width = (c.offsetWidth || 300) * dpr;
+  c.height = 160 * dpr;
+  ctx.scale(dpr, dpr);
+  const W = c.offsetWidth || 300, H = 160;
+  ctx.clearRect(0, 0, W, H);
+
+  const lotLines = PORT.map((p, pi) => {
+    return {
+      ticker: p.ticker,
+      color: COLORS[pi],
+      vals: data.map(e => e.lots ? (e.lots[p.ticker] || 0) : (startLots[p.ticker] || 0))
+    };
+  });
+
+  const allLots = lotLines.flatMap(l => l.vals);
+  if(allLots.length < 2) return;
+  const minL = Math.min(...allLots) * 0.98, maxL = Math.max(...allLots) * 1.02, range = maxL - minL || 1;
+
+  function toY(v) { return H - 15 - (v - minL) / range * (H - 30); }
+  function toX(i) { return 40 + (i / (data.length - 1 || 1)) * (W - 50); }
+
+  drawGrid(ctx, W, H);
+  drawYLabels(ctx, minL, maxL, H, '');
+
+  lotLines.forEach(l => {
+    ctx.strokeStyle = l.color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    l.vals.forEach((v, i) => i === 0 ? ctx.moveTo(toX(i), toY(v)) : ctx.lineTo(toX(i), toY(v)));
+    ctx.stroke();
+  });
+  drawXLabels(ctx, data, toX, H);
+
+  document.getElementById('lot-accum-legend').innerHTML = PORT.map((p, pi) => 
+    `<div class="legend-item"><span class="legend-dot" style="background:${COLORS[pi]}"></span>${p.ticker}: ${startLots[p.ticker] || 0}</div>`
+  ).join('');
+}
+
+function drawLineChart(id,data,linesFn,h,prefix,dpr){
+  const c=document.getElementById(id);const ctx=c.getContext('2d');
+  c.width=(c.offsetWidth||300)*dpr;c.height=h*dpr;ctx.scale(dpr,dpr);
+  const W=c.offsetWidth||300,H=h;ctx.clearRect(0,0,W,H);
+  const allVals=data.flatMap(e=>linesFn(e).map(l=>l.v)).filter(v=>v>0);
+  if(allVals.length<2)return;
+  const minV=Math.min(...allVals)*0.995,maxV=Math.max(...allVals)*1.005,range=maxV-minV||1;
+  function toY(v){return H-15-(v-minV)/range*(H-30);}
+  function toX(i){return 40+(i/(data.length-1||1))*(W-50);}
+  drawGrid(ctx,W,H);drawYLabels(ctx,minV,maxV,H,prefix);
+  linesFn(data[0]).forEach((_,li)=>{
+    const vals=data.map(e=>linesFn(e)[li]);
+    const col=vals[0].c;
+    ctx.beginPath();ctx.moveTo(toX(0),H-15);
+    vals.forEach((l,i)=>{if(l.v>0)ctx.lineTo(toX(i),toY(l.v));});
+    ctx.lineTo(toX(data.length-1),H-15);ctx.closePath();
+    const grad=ctx.createLinearGradient(0,0,0,H);grad.addColorStop(0,col+'40');grad.addColorStop(1,col+'00');
+    ctx.fillStyle=grad;ctx.fill();
+    ctx.strokeStyle=col;ctx.lineWidth=2;ctx.beginPath();
+    vals.forEach((l,i)=>i===0?ctx.moveTo(toX(i),toY(l.v)):l.v>0&&ctx.lineTo(toX(i),toY(l.v)));ctx.stroke();
+  });
+  drawXLabels(ctx,data,toX,H);
+}
+
+function drawGrid(ctx,W,H){ctx.strokeStyle='rgba(255,255,255,.05)';ctx.lineWidth=1;for(let g=0;g<5;g++){const y=15+g*(H-30)/4;ctx.beginPath();ctx.moveTo(40,y);ctx.lineTo(W-10,y);ctx.stroke();}}
+function drawYLabels(ctx,minV,maxV,H,prefix){ctx.fillStyle='rgba(90,106,122,.7)';ctx.font='9px Share Tech Mono';ctx.textAlign='right';for(let g=0;g<5;g++){const v=minV+g*(maxV-minV)/4;const label=Math.abs(v)>=1000?(v/1000).toFixed(1)+'K':v.toFixed(1);ctx.fillText(prefix+label,36,H-15-g*(H-30)/4+4);}}
+function drawXLabels(ctx,data,toX,H){ctx.fillStyle='rgba(90,106,122,.7)';ctx.font='9px Share Tech Mono';ctx.textAlign='center';const step=Math.max(1,Math.floor(data.length/5));for(let i=0;i<data.length;i+=step){const d=new Date(data[i].date);ctx.fillText(d.getDate()+'/'+(d.getMonth()+1),toX(i),H-2);}}
+
+async function fetchAllPrices(){
+  document.getElementById('refresh-icon').innerHTML='<span class="spinner"></span>';
+  let fetched=0;
+  for(const p of PORT){
+    let cur=0,prevC=0,marketState='CLOSED';
+    try{const url=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(p.ticker)}?interval=1d&range=2d`;const res=await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);if(res.ok){const d=await res.json();const m=d?.chart?.result?.[0]?.meta;if(m){cur=m.preMarketPrice||m.regularMarketPrice||0;prevC=m.previousClose||m.chartPreviousClose||0;marketState=m.marketState||'CLOSED';}}}catch(e){}
+    if(!cur){try{const url=`https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(p.ticker)}?interval=1d&range=2d`;const res=await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);if(res.ok){const d=await res.json();const m=d?.chart?.result?.[0]?.meta;if(m){cur=m.preMarketPrice||m.regularMarketPrice||0;prevC=m.previousClose||m.chartPreviousClose||0;marketState=m.marketState||'CLOSED';}}}catch(e){}}
+    if(!cur){try{const res=await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(p.ticker)}?interval=1d&range=2d`);if(res.ok){const d=await res.json();const m=d?.chart?.result?.[0]?.meta;if(m){cur=m.preMarketPrice||m.regularMarketPrice||0;prevC=m.previousClose||m.chartPreviousClose||0;marketState=m.marketState||'CLOSED';}}}catch(e){}}
+    if(cur>0){
+      prevClose[p.ticker]=prevC||prices[p.ticker]||cur;prices[p.ticker]=cur;
+      const inp=document.getElementById('price-'+p.ticker);if(inp&&!inp.matches(':focus'))inp.value=cur.toFixed(2);
+      const pEl=document.getElementById('pchange-'+p.ticker);
+      if(pEl&&prevC>0){const ch=(cur-prevC)/prevC*100;const st=marketState==='PRE'?'⏰':marketState==='POST'?'🌙':marketState==='REGULAR'?'🟢':'🔴';pEl.textContent=`${st} ${ch>=0?'+':''}${ch.toFixed(2)}%`;pEl.style.color=ch>0?'var(--green)':ch<0?'var(--red)':'var(--muted)';}
+      fetched++;
+    }
+  }
+  const now=new Date();
+  document.getElementById('last-update').textContent=`Son: ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+  document.getElementById('refresh-icon').textContent='⟳';
+  saveState();refreshDisplays();
+  PORT.forEach(p=>checkSignal(p.ticker));
+  if(fetched===0)triggerAlert('sell','Fiyat alınamadı — manuel giriş yapabilirsiniz');
+}
+
+function startAutoRefresh(){if(arTimer)clearInterval(arTimer);if(document.getElementById('auto-refresh').checked)arTimer=setInterval(()=>{fetchAllPrices();fetchKur();},60000);}
+function toggleAutoRefresh(){startAutoRefresh();}
+
+function saveState(){try{const d=JSON.stringify({prices,prevClose,startPrices,startLots,priceHistory,kur:kurVal});try{localStorage.setItem('shannon_etf_v2',d);}catch(e){}try{sessionStorage.setItem('shannon_etf_v2',d);}catch(e){}try{const enc=btoa(unescape(encodeURIComponent(d)));document.cookie='shannon_etf_v2='+enc+';path=/;max-age=31536000;SameSite=Strict';}catch(e){}}catch(e){}}
+function loadState(){try{let raw=null;try{raw=localStorage.getItem('shannon_etf_v2');}catch(e){}if(!raw){try{raw=sessionStorage.getItem('shannon_etf_v2');}catch(e){}}if(!raw){try{const m=document.cookie.match(/shannon_etf_v2=([^;]+)/);if(m)raw=decodeURIComponent(escape(atob(m[1])));}catch(e){}}if(!raw)return;const s=JSON.parse(raw);prices=s.prices||{};prevClose=s.prevClose||{};startPrices=s.startPrices||{};startLots=s.startLots||{};priceHistory=s.priceHistory||[];if(s.kur)kurVal=s.kur;}catch(e){}}
+
+function saveAndCopy(){const code=btoa(unescape(encodeURIComponent(JSON.stringify({prices,prevClose,startPrices,startLots,priceHistory}))));document.getElementById('save-code').value=code;document.getElementById('save-code-wrap').style.display='block';navigator.clipboard?.writeText(code).then(()=>triggerAlert('buy','Kod kopyalandı!')).catch(()=>{document.getElementById('save-code').select();});}
+function showLoadInput(){const w=document.getElementById('load-wrap');w.style.display=w.style.display==='none'?'block':'none';}
+function loadFromCode(){try{const s=JSON.parse(decodeURIComponent(escape(atob(document.getElementById('load-code').value.trim()))));if(s.prices)prices=s.prices;if(s.prevClose)prevClose=s.prevClose;if(s.startPrices)startPrices=s.startPrices;if(s.startLots)startLots=s.startLots;if(s.priceHistory)priceHistory=s.priceHistory;fillInputs();saveState();refreshDisplays();document.getElementById('load-wrap').style.display='none';triggerAlert('buy','Veriler yüklendi!');}catch(e){triggerAlert('sell','Geçersiz kod');}}
 </script>
 </body>
 </html>
