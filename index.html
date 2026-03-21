@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
@@ -174,6 +173,11 @@ canvas{width:100%;border-radius:8px;background:var(--bg)}
   <div class="card" style="padding:10px;margin-top:0">
     <div class="sec-title" style="margin-bottom:8px"><span class="dot" style="background:var(--yellow)"></span>TOPLAM PORTFÖY (₺)</div>
     <canvas id="chart-total-tl" height="140"></canvas>
+  </div>
+  <div class="card" style="padding:10px;margin-top:0">
+    <div class="sec-title" style="margin-bottom:8px"><span class="dot" style="background:var(--accent)"></span>LOT SAYACI GELİŞİMİ (ADET)</div>
+    <canvas id="chart-lot-accumulation" height="160"></canvas>
+    <div class="legend" id="lot-accum-legend"></div>
   </div>
   <div class="card" style="padding:10px;margin-top:0">
     <div class="sec-title" style="margin-bottom:8px"><span class="dot" style="background:var(--green)"></span>HER VARLIK — $ GELİŞİMİ</div>
@@ -382,8 +386,11 @@ function refreshDisplays(){
   });
   updateOverview(tv);renderAllocTable();renderPL();
   if(tv>0){
-    const snap={date:new Date().toISOString(),prices:{},totalUSD:tv,totalTL:kurVal>0?tv*kurVal:0,kur:kurVal};
-    PORT.forEach(p=>{snap.prices[p.ticker]=prices[p.ticker]||0;});
+    const snap={date:new Date().toISOString(),prices:{},lots:{},totalUSD:tv,totalTL:kurVal>0?tv*kurVal:0,kur:kurVal};
+    PORT.forEach(p=>{
+      snap.prices[p.ticker]=prices[p.ticker]||0;
+      snap.lots[p.ticker]=startLots[p.ticker]||0;
+    });
     const last=priceHistory[priceHistory.length-1];
     if(!last||new Date()-new Date(last.date)>300000)priceHistory.push(snap);
     if(priceHistory.length>200)priceHistory.shift();
@@ -446,6 +453,10 @@ function drawAllCharts(){
   const dpr=window.devicePixelRatio||1;
   drawLineChart('chart-total-usd',data,e=>[{v:e.totalUSD,c:'#00e5ff'}],160,'$',dpr);
   drawLineChart('chart-total-tl',data,e=>[{v:e.totalTL,c:'#a78bfa'}],140,'₺',dpr);
+  
+  // Lot Biriktirme Grafiği Çizimi
+  drawLotAccumulationChart(data, dpr);
+
   const c3=document.getElementById('chart-each');
   const ctx3=c3.getContext('2d');
   c3.width=(c3.offsetWidth||300)*dpr;c3.height=160*dpr;ctx3.scale(dpr,dpr);
@@ -493,6 +504,48 @@ function drawAllCharts(){
   ctx5.fillStyle='rgba(90,106,122,.7)';ctx5.font='9px Share Tech Mono';ctx5.textAlign='right';
   ctx5.fillText('+'+maxD.toFixed(1)+'%',36,12);ctx5.fillText('-'+maxD.toFixed(1)+'%',36,H5-2);
   drawXLabels(ctx5,data,toXd,H5);
+}
+
+// YENİ: Lot Biriktirme Grafiği Fonksiyonu
+function drawLotAccumulationChart(data, dpr) {
+  const c = document.getElementById('chart-lot-accumulation');
+  const ctx = c.getContext('2d');
+  c.width = (c.offsetWidth || 300) * dpr;
+  c.height = 160 * dpr;
+  ctx.scale(dpr, dpr);
+  const W = c.offsetWidth || 300, H = 160;
+  ctx.clearRect(0, 0, W, H);
+
+  const lotLines = PORT.map((p, pi) => {
+    return {
+      ticker: p.ticker,
+      color: COLORS[pi],
+      vals: data.map(e => e.lots ? (e.lots[p.ticker] || 0) : (startLots[p.ticker] || 0))
+    };
+  });
+
+  const allLots = lotLines.flatMap(l => l.vals);
+  if(allLots.length < 2) return;
+  const minL = Math.min(...allLots) * 0.98, maxL = Math.max(...allLots) * 1.02, range = maxL - minL || 1;
+
+  function toY(v) { return H - 15 - (v - minL) / range * (H - 30); }
+  function toX(i) { return 40 + (i / (data.length - 1 || 1)) * (W - 50); }
+
+  drawGrid(ctx, W, H);
+  drawYLabels(ctx, minL, maxL, H, '');
+
+  lotLines.forEach(l => {
+    ctx.strokeStyle = l.color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    l.vals.forEach((v, i) => i === 0 ? ctx.moveTo(toX(i), toY(v)) : ctx.lineTo(toX(i), toY(v)));
+    ctx.stroke();
+  });
+  drawXLabels(ctx, data, toX, H);
+
+  document.getElementById('lot-accum-legend').innerHTML = PORT.map((p, pi) => 
+    `<div class="legend-item"><span class="legend-dot" style="background:${COLORS[pi]}"></span>${p.ticker}: ${startLots[p.ticker] || 0}</div>`
+  ).join('');
 }
 
 function drawLineChart(id,data,linesFn,h,prefix,dpr){
