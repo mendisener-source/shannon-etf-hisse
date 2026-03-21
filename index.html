@@ -8,20 +8,22 @@
 <style>
 :root{--bg:#0a0c0f;--surface:#111417;--card:#161a1f;--border:#1e2530;--accent:#00e5ff;--green:#00ff88;--red:#ff3860;--text:#e0e8f0;--muted:#5a6a7a}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;padding:15px}
-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:15px;border-bottom:1px solid var(--accent);margin-bottom:20px}
-.h-title{font-size:20px;font-weight:700;color:var(--accent);letter-spacing:1px}
-.h-total{font-size:24px;font-family:'Share Tech Mono',monospace;color:var(--green)}
-.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:15px;margin-bottom:12px}
-.ticker-row{display:flex;justify-content:space-between;margin-bottom:8px;font-weight:600}
-.inp{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:20px;padding:8px;outline:none;margin:8px 0}
-.band-bar{height:10px;background:var(--bg);border-radius:5px;border:1px solid var(--border);position:relative;margin-top:10px}
-.band-fill{height:100%;border-radius:5px;transition:width 0.4s}
-.btn{width:100%;padding:15px;border-radius:10px;border:1px solid var(--accent);background:rgba(0,229,255,0.08);color:var(--accent);font-weight:700;cursor:pointer;margin-top:10px}
-canvas{width:100%;background:var(--bg);border-radius:8px;margin-top:10px}
-.signal-box{margin-top:8px;font-weight:700;padding:8px;border-radius:6px;text-align:center;font-size:14px}
-.buy{background:rgba(0,255,136,0.1);color:var(--green);border:1px solid var(--green)}
-.sell{background:rgba(255,56,96,0.1);color:var(--red);border:1px solid var(--red)}
+body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;padding:15px;max-width:600px;margin:auto}
+header{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--accent);margin-bottom:20px}
+.h-title{font-size:18px;font-weight:700;color:var(--accent);letter-spacing:1px}
+.h-total{font-size:22px;font-family:'Share Tech Mono',monospace;color:var(--green)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:15px;margin-bottom:12px;box-shadow: 0 4px 15px rgba(0,0,0,0.3)}
+.ticker-row{display:flex;justify-content:space-between;margin-bottom:8px;font-weight:700;font-size:18px}
+.inp{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:20px;padding:10px;outline:none;margin:8px 0;text-align:center}
+.band-bar{height:12px;background:var(--bg);border-radius:6px;border:1px solid var(--border);position:relative;margin-top:10px;overflow:hidden}
+.band-fill{height:100%;transition:width 0.6s cubic-bezier(0.17, 0.67, 0.83, 0.67)}
+.btn{width:100%;padding:18px;border-radius:12px;border:2px solid var(--accent);background:rgba(0,229,255,0.1);color:var(--accent);font-weight:700;font-size:16px;cursor:pointer;margin-top:10px;transition: 0.3s}
+.btn:active{transform: scale(0.98); background:var(--accent); color:black}
+canvas{width:100%;height:150px;background:var(--bg);border-radius:8px;margin-top:10px}
+.signal-box{margin-top:10px;font-weight:700;padding:10px;border-radius:8px;text-align:center;font-size:15px;letter-spacing:1px}
+.buy{background:rgba(0,255,136,0.15);color:var(--green);border:1px solid var(--green)}
+.sell{background:rgba(255,56,96,0.15);color:var(--red);border:1px solid var(--red)}
+.lot-label{font-size:12px;color:var(--muted);text-align:center;margin-top:5px}
 </style>
 </head>
 <body>
@@ -34,14 +36,16 @@ canvas{width:100%;background:var(--bg);border-radius:8px;margin-top:10px}
 <div id="assets-container"></div>
 
 <div class="card">
-  <div style="font-size:12px;color:var(--muted);margin-bottom:8px">BİRİKMİŞ TOPLAM LOT (Snowball)</div>
-  <canvas id="lot-chart" height="150"></canvas>
-  <div id="lot-count" style="font-size:14px;text-align:center;margin-top:10px;color:white"></div>
+  <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">BİRİKMİŞ TOPLAM LOT (Snowball Line)</div>
+  <canvas id="lot-chart"></canvas>
+  <div id="lot-count" style="font-size:16px;font-weight:700;text-align:center;margin-top:10px;color:#fff;font-family:'Share Tech Mono'"></div>
+  <div class="lot-label">Toplam lot miktarındaki gelişim</div>
 </div>
 
-<button class="btn" onclick="fetchAllPrices()">FİYATLARI GÜNCELLE</button>
+<button class="btn" onclick="fetchAllPrices()">FİYATLARI VE SİNYALLERİ GÜNCELLE</button>
 
 <script>
+// VARLIK TANIMLARI (Buradan hedef ve limitleri değiştirebilirsin)
 const PORT = [
   {ticker:'AMDG', target:20, buyLim:18, sellLim:22, color:'#00e5ff'},
   {ticker:'SPXL', target:20, buyLim:18, sellLim:22, color:'#ff6d00'},
@@ -50,7 +54,7 @@ const PORT = [
   {ticker:'TMF',  target:20, buyLim:18, sellLim:22, color:'#a78bfa'}
 ];
 
-// BAŞLANGIÇ LOTLARIN (Senin ekran görüntülerindeki veriler)
+// MEVCUT LOT MİKTARLARIN (Görselden aldığım veriler)
 let myLots = { 'AMDG': 758, 'SPXL': 85, 'NVDU': 430, 'TSLL': 310, 'TMF': 150 };
 let prices = {};
 let lotHistory = [];
@@ -61,8 +65,12 @@ function init() {
     const div = document.createElement('div');
     div.className = 'card';
     div.innerHTML = `
-      <div class="ticker-row"><span>${p.ticker}</span><span id="weight-${p.ticker}">%0</span></div>
-      <input type="number" class="inp" id="price-${p.ticker}" value="0" onchange="updateUI()">
+      <div class="ticker-row">
+        <span style="color:${p.color}">${p.ticker}</span>
+        <span id="weight-${p.ticker}" style="font-family:'Share Tech Mono'">%0</span>
+      </div>
+      <div style="font-size:11px; color:var(--muted)">GÜNCEL FİYAT ($)</div>
+      <input type="number" class="inp" id="price-${p.ticker}" value="0" step="0.01" onchange="updateUI()">
       <div class="band-bar"><div class="band-fill" id="fill-${p.ticker}" style="background:${p.color}"></div></div>
       <div id="sig-${p.ticker}"></div>
     `;
@@ -72,8 +80,12 @@ function init() {
 }
 
 async function fetchAllPrices() {
+  const btn = document.querySelector('.btn');
+  btn.textContent = "GÜNCELLENİYOR...";
+  
   for(const p of PORT) {
     try {
+      // Yahoo Finance verisi için güvenli proxy
       const url = `https://api.allorigins.win/raw?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/'+p.ticker)}`;
       const res = await fetch(url);
       const d = await res.json();
@@ -82,53 +94,82 @@ async function fetchAllPrices() {
         prices[p.ticker] = pr;
         document.getElementById(`price-${p.ticker}`).value = pr.toFixed(2);
       }
-    } catch(e) { console.log("Hata:", p.ticker); }
+    } catch(e) { console.log("Veri çekme hatası:", p.ticker); }
   }
   updateUI();
+  btn.textContent = "FİYATLARI VE SİNYALLERİ GÜNCELLE";
 }
 
 function updateUI() {
-  let total = 0;
+  let totalUSD = 0;
+  let currentTotalLots = 0;
+
+  // Önce toplam portföy değerini hesapla
   PORT.forEach(p => {
-    prices[p.ticker] = parseFloat(document.getElementById(`price-${p.ticker}`).value) || 0;
-    total += prices[p.ticker] * myLots[p.ticker];
+    let inputVal = parseFloat(document.getElementById(`price-${p.ticker}`).value) || 0;
+    prices[p.ticker] = inputVal;
+    totalUSD += inputVal * myLots[p.ticker];
+    currentTotalLots += myLots[p.ticker];
   });
   
-  document.getElementById('header-total').textContent = '$' + total.toLocaleString(undefined, {maximumFractionDigits:0});
+  document.getElementById('header-total').textContent = '$' + totalUSD.toLocaleString(undefined, {maximumFractionDigits:0});
 
-  let currentTotalLots = 0;
+  // Sonra ağırlıkları ve sinyalleri hesapla
   PORT.forEach(p => {
-    let weight = total > 0 ? ((prices[p.ticker] * myLots[p.ticker]) / total) * 100 : 0;
+    let assetValue = prices[p.ticker] * myLots[p.ticker];
+    let weight = totalUSD > 0 ? (assetValue / totalUSD) * 100 : 0;
+    
     document.getElementById(`weight-${p.ticker}`).textContent = '%' + weight.toFixed(1);
     document.getElementById(`fill-${p.ticker}`).style.width = weight + '%';
     
-    const sig = document.getElementById(`sig-${p.ticker}`);
-    if(weight >= p.sellLim) sig.innerHTML = `<div class="signal-box sell">SATIŞ ZAMANI</div>`;
-    else if(weight <= p.buyLim) sig.innerHTML = `<div class="signal-box buy">ALIM ZAMANI</div>`;
-    else sig.innerHTML = '';
-    
-    currentTotalLots += myLots[p.ticker];
+    const sigDiv = document.getElementById(`sig-${p.ticker}`);
+    if(weight >= p.sellLim) {
+      sigDiv.innerHTML = `<div class="signal-box sell">🚨 SATIŞ ZAMANI (Ağırlık: %${weight.toFixed(1)})</div>`;
+    } else if(weight <= p.buyLim) {
+      sigDiv.innerHTML = `<div class="signal-box buy">✅ ALIM ZAMANI (Ağırlık: %${weight.toFixed(1)})</div>`;
+    } else {
+      sigDiv.innerHTML = '';
+    }
   });
 
+  // Lot gelişimini kaydet
   lotHistory.push(currentTotalLots);
-  if(lotHistory.length > 50) lotHistory.shift();
-  drawChart();
-  document.getElementById('lot-count').textContent = `Toplam Lot: ${currentTotalLots}`;
+  if(lotHistory.length > 30) lotHistory.shift();
+  drawLotChart();
+  document.getElementById('lot-count').textContent = `${currentTotalLots.toFixed(0)} LOT`;
 }
 
-function drawChart() {
-  const c = document.getElementById('lot-chart');
-  const ctx = c.getContext('2d');
-  const W = c.width, H = c.height;
-  ctx.clearRect(0,0,W,H);
-  if(lotHistory.length < 2) return;
+function drawLotChart() {
+  const canvas = document.getElementById('lot-chart');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+
+  const W = rect.width;
+  const H = rect.height;
   
-  const min = Math.min(...lotHistory) * 0.99, max = Math.max(...lotHistory) * 1.01;
-  ctx.strokeStyle = 'white'; ctx.lineWidth = 3; ctx.beginPath();
-  lotHistory.forEach((v, i) => {
+  ctx.clearRect(0, 0, W, H);
+  if(lotHistory.length < 2) return;
+
+  const min = Math.min(...lotHistory) * 0.995;
+  const max = Math.max(...lotHistory) * 1.005;
+  const range = max - min || 1;
+
+  ctx.beginPath();
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 3;
+  ctx.lineJoin = 'round';
+  ctx.shadowBlur = 10;
+  ctx.shadowColor = 'rgba(255,255,255,0.5)';
+
+  lotHistory.forEach((val, i) => {
     const x = (i / (lotHistory.length - 1)) * W;
-    const y = H - ((v - min) / (max - min)) * H;
-    if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    const y = H - ((val - min) / range) * H;
+    if(i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
   });
   ctx.stroke();
 }
